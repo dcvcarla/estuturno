@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commerce {
+  id                  Int      @id @default(autoincrement())
+  nombre              String
+  dominio             String   @unique
+  telefonoWhatsapp    String?
+  mpAccessToken       String?
+  configuracionHorarios String? @map("configuracion_horarios") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  services    Service[]
+  appointments Appointment[]
+  admins      Admin[]
+
+  @@map("commerces")
+}
+
+model Service {
+  id             Int      @id @default(autoincrement())
+  commerceId     Int      @map("commerce_id")
+  nombre         String
+  duracionMinutos Int     @map("duracion_minutos")
+  precio         Decimal  @db.Decimal(10, 2)
+  montoSena      Decimal? @map("monto_seña") @db.Decimal(10, 2)
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  commerce      Commerce      @relation(fields: [commerceId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id             Int      @id @default(autoincrement())
+  commerceId     Int      @map("commerce_id")
+  serviceId      Int      @map("service_id")
+  nombreCliente  String   @map("nombre_cliente")
+  telefonoCliente String  @map("telefono_cliente")
+  fechaHoraInicio DateTime @map("fecha_hora_inicio")
+  fechaHoraFin   DateTime @map("fecha_hora_fin")
+  estado         String   @default("pendiente_pago")
+  mpPaymentId    String?  @map("mp_payment_id")
+  mpPreferenceId String?  @map("mp_preference_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  commerce Commerce @relation(fields: [commerceId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id])
+
+  @@map("appointments")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  commerceId   Int      @map("commerce_id")
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  nombre       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  commerce Commerce @relation(fields: [commerceId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
