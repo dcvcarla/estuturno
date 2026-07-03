@@ -15,7 +15,14 @@ declare global {
 }
 
 export async function resolveCommerce(req: Request, res: Response, next: NextFunction) {
-  if (req.path.startsWith("/api/auth") || req.path.startsWith("/api/health") || req.path.startsWith("/admin")) {
+  const authHeader = req.headers.authorization;
+  if (
+    req.path.startsWith("/api/auth") ||
+    req.path.startsWith("/api/health") ||
+    req.path.startsWith("/admin") ||
+    req.path.startsWith("/api/webhooks") ||
+    (authHeader && authHeader.startsWith("Bearer "))
+  ) {
     return next();
   }
 
