@@ -14,6 +14,7 @@ export async function createPaymentPreference(
   const result = await preference.create({
     body: {
       items: items.map((item) => ({
+        id: String(item.title).toLowerCase().replace(/\s+/g, "_"),
         title: item.title,
         unit_price: item.unit_price,
         quantity: item.quantity,

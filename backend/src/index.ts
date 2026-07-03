@@ -37,7 +37,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api", paymentRoutes);
 
-io.on("connection", (socket) => {
+io.on("connection", (socket: import("socket.io").Socket) => {
   console.log("Client connected:", socket.id);
 
   socket.on("join:commerce", (commerceId: number) => {
