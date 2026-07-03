@@ -15,7 +15,7 @@ declare global {
 }
 
 export async function resolveCommerce(req: Request, res: Response, next: NextFunction) {
-  if (req.path.startsWith("/api/auth") || req.path.startsWith("/admin")) {
+  if (req.path.startsWith("/api/auth") || req.path.startsWith("/api/health") || req.path.startsWith("/admin")) {
     return next();
   }
 
