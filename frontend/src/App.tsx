@@ -12,26 +12,26 @@ import { Landing } from "./pages/Landing";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route
-          path="/admin"
-          element={
-            <AuthProvider>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin"
+            element={
               <ProtectedRoute>
                 <AdminLayout />
               </ProtectedRoute>
-            </AuthProvider>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="agenda" element={<AdminAgenda />} />
-          <Route path="servicios" element={<AdminServices />} />
-          <Route path="configuracion" element={<AdminSettings />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="agenda" element={<AdminAgenda />} />
+            <Route path="servicios" element={<AdminServices />} />
+            <Route path="configuracion" element={<AdminSettings />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
