@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: estuturno
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npx tsc && cp -r ../frontend/dist dist/public
+    startCommand: npx prisma db push && node dist/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
