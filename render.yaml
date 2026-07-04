@@ -1,10 +1,11 @@
 services:
   - type: web
-    name: estuturno
+    name: estuturno-backend
     env: node
     region: ohio
     plan: free
-    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npx tsc && cp -r ../frontend/dist dist/public
+    rootDir: backend
+    buildCommand: cd ../frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npx tsc && cp -r ../frontend/dist dist/public
     startCommand: npx prisma db push && node dist/index.js
     healthCheckPath: /api/health
     envVars:
