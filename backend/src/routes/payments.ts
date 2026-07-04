@@ -63,13 +63,13 @@ router.post("/webhooks/mercadopago", async (req: Request, res: Response) => {
       return res.sendStatus(200);
     }
 
-    const paymentId = data?.id;
+    const paymentId = String(data?.id || "");
     if (!paymentId) {
       return res.sendStatus(400);
     }
 
     const existing = await prisma.appointment.findFirst({
-      where: { mpPaymentId: String(paymentId) },
+      where: { mpPaymentId: paymentId },
     });
 
     if (existing && existing.estado === "confirmado") {
@@ -89,7 +89,7 @@ router.post("/webhooks/mercadopago", async (req: Request, res: Response) => {
         where: { id: appointmentId },
         data: {
           estado: "confirmado",
-          mpPaymentId: String(paymentId),
+          mpPaymentId: paymentId,
         },
         include: { commerce: true },
       });
@@ -99,7 +99,20 @@ router.post("/webhooks/mercadopago", async (req: Request, res: Response) => {
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("Webhook error:", err);
+    const paymentId = String(req.body?.data?.id || "");
+    if (paymentId) {
+      const nextRetry = new Date(Date.now() + 60 * 1000);
+      await prisma.pendingWebhook.create({
+        data: {
+          paymentId,
+          retries: 0,
+          maxRetries: 5,
+          nextRetryAt: nextRetry,
+          lastError: err instanceof Error ? err.message : String(err),
+        },
+      }).catch(() => {});
+    }
+    console.error("Webhook error (queued for retry):", err);
     res.sendStatus(200);
   }
 });

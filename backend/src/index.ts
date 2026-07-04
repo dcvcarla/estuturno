@@ -12,6 +12,7 @@ import serviceRoutes from "./routes/services";
 import appointmentRoutes from "./routes/appointments";
 import paymentRoutes from "./routes/payments";
 import { cancelExpiredAppointments } from "./services/cron";
+import { processPendingWebhooks } from "./services/webhookRetry";
 
 dotenv.config();
 
@@ -107,5 +108,8 @@ autoSeed().then(() => {
 
 setInterval(cancelExpiredAppointments, 60 * 1000);
 cancelExpiredAppointments();
+
+setInterval(processPendingWebhooks, 30 * 1000);
+processPendingWebhooks();
 
 export { app, httpServer, io };

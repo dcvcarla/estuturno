@@ -75,3 +75,16 @@ model Admin {
 
   @@map("admins")
 }
+
+model PendingWebhook {
+  id          Int      @id @default(autoincrement())
+  paymentId   String   @map("payment_id")
+  retries     Int      @default(0)
+  maxRetries  Int      @default(5)
+  nextRetryAt DateTime @map("next_retry_at")
+  lastError   String?  @map("last_error") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("pending_webhooks")
+}
