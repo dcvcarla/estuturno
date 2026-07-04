@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { authenticate } from "../middleware/auth";
+import { validate, serviceCreateSchema, serviceUpdateSchema } from "../middleware/validate";
 
 const router = Router();
 
@@ -19,12 +20,8 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
   res.json(services.map(serializeService));
 });
 
-router.post("/", authenticate, async (req: Request, res: Response) => {
+router.post("/", authenticate, validate(serviceCreateSchema), async (req: Request, res: Response) => {
   const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
-
-  if (!nombre || !duracionMinutos || precio === undefined) {
-    return res.status(400).json({ error: "Nombre, duracionMinutos and precio required" });
-  }
 
   const service = await prisma.service.create({
     data: {
@@ -40,7 +37,7 @@ router.post("/", authenticate, async (req: Request, res: Response) => {
   res.status(201).json(serializeService(service));
 });
 
-router.put("/:id", authenticate, async (req: Request, res: Response) => {
+router.put("/:id", authenticate, validate(serviceUpdateSchema), async (req: Request, res: Response) => {
   const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
   const id = Number(req.params.id);
 

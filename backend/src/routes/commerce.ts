@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { authenticate } from "../middleware/auth";
+import { validate, commerceUpdateSchema } from "../middleware/validate";
 
 const router = Router();
 
@@ -11,7 +12,7 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
   res.json(commerce);
 });
 
-router.put("/", authenticate, async (req: Request, res: Response) => {
+router.put("/", authenticate, validate(commerceUpdateSchema), async (req: Request, res: Response) => {
   const { nombre, telefonoWhatsapp, mpAccessToken, configuracionHorarios } = req.body;
 
   const commerce = await prisma.commerce.update({

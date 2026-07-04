@@ -3,16 +3,13 @@ import bcrypt from "bcryptjs";
 import prisma from "../utils/prisma";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { authenticate } from "../middleware/auth";
+import { validate, loginSchema } from "../middleware/validate";
 
 const router = Router();
 
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", validate(loginSchema), async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
-    }
 
     const admin = await prisma.admin.findUnique({ where: { email } });
     if (!admin) {

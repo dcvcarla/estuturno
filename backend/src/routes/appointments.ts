@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { authenticate } from "../middleware/auth";
 import { getAvailableSlots } from "../services/slots";
+import { validate, appointmentCreateSchema } from "../middleware/validate";
 import { io } from "../index";
 
 const router = Router();
@@ -48,16 +49,12 @@ router.get("/available-dates", async (req: Request, res: Response) => {
   res.json(dates);
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(appointmentCreateSchema), async (req: Request, res: Response) => {
   if (!req.commerce) {
     return res.status(404).json({ error: "Commerce not found" });
   }
 
   const { serviceId, fecha, hora, nombreCliente, telefonoCliente } = req.body;
-
-  if (!serviceId || !fecha || !hora || !nombreCliente || !telefonoCliente) {
-    return res.status(400).json({ error: "serviceId, fecha, hora, nombreCliente and telefonoCliente required" });
-  }
 
   const service = await prisma.service.findFirst({
     where: { id: serviceId, commerceId: req.commerce.id, activo: true },

@@ -1,20 +1,18 @@
 import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { createPaymentPreference } from "../services/mercadopago";
+import { validate, paymentPreferenceSchema } from "../middleware/validate";
 import { io } from "../index";
 
 const router = Router();
 
-router.post("/create-preference", async (req: Request, res: Response) => {
+router.post("/create-preference", validate(paymentPreferenceSchema), async (req: Request, res: Response) => {
   try {
     if (!req.commerce) {
       return res.status(404).json({ error: "Commerce not found" });
     }
 
     const { appointmentId } = req.body;
-    if (!appointmentId) {
-      return res.status(400).json({ error: "appointmentId required" });
-    }
 
     const appointment = await prisma.appointment.findFirst({
       where: { id: appointmentId, commerceId: req.commerce.id, estado: "pendiente_pago" },
