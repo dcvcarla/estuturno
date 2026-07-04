@@ -21,9 +21,21 @@ async function main() {
         miercoles: [{ inicio: "09:00", fin: "18:00" }],
         jueves: [{ inicio: "09:00", fin: "18:00" }],
         viernes: [{ inicio: "09:00", fin: "18:00" }],
+        sabado: [{ inicio: "09:00", fin: "14:00" }],
       }),
     },
   });
+
+  const existingServices = await prisma.service.count({ where: { commerceId: commerce.id } });
+  if (existingServices === 0) {
+    await prisma.service.createMany({
+      data: [
+        { commerceId: commerce.id, nombre: "Corte de cabello", duracionMinutos: 30, precio: 1500, montoSena: 500 },
+        { commerceId: commerce.id, nombre: "Depilacion", duracionMinutos: 45, precio: 2500, montoSena: null },
+        { commerceId: commerce.id, nombre: "Manicuria", duracionMinutos: 60, precio: 2000, montoSena: null },
+      ],
+    });
+  }
 
   const admin = await prisma.admin.upsert({
     where: { email: adminEmail },
@@ -50,6 +62,7 @@ async function main() {
         miercoles: [{ inicio: "09:00", fin: "18:00" }],
         jueves: [{ inicio: "09:00", fin: "18:00" }],
         viernes: [{ inicio: "09:00", fin: "18:00" }],
+        sabado: [{ inicio: "09:00", fin: "14:00" }],
       }),
     },
   });
@@ -68,7 +81,6 @@ async function main() {
   console.log("Seed completado:");
   console.log(`  Comercio (Render): ${commerce.dominio}`);
   console.log(`  Admin: ${adminEmail} / ${password}`);
-  console.log(`  Comercio (Local): ${localCommerce.dominio}`);
   console.log(`  Admin local: local@test.com / ${password}`);
 }
 
