@@ -29,9 +29,8 @@ export function Landing() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const params = { headers: { "x-forwarded-host": window.location.host } };
-    api<Commerce>("/api/commerce/public", params).then(setCommerce).catch(() => {});
-    api<Service[]>("/api/services/public", params).then(setServices).catch(() => {});
+    api<Commerce>("/api/commerce/public").then(setCommerce).catch(() => {});
+    api<Service[]>("/api/services/public").then(setServices).catch(() => {});
   }, []);
 
   async function selectService(s: Service) {
