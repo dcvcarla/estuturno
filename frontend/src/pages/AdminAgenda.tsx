@@ -19,14 +19,16 @@ export function AdminAgenda() {
   function loadAppointments() {
     const params = new URLSearchParams({ date });
     if (estado) params.append("estado", estado);
-    api<Appointment[]>(`/api/appointments?${params}`).then(setAppointments);
+    api<Appointment[]>(`/api/appointments?${params}`).then(setAppointments).catch(() => {});
   }
 
   useEffect(() => { loadAppointments() }, [date, estado]);
 
   async function cancelAppointment(id: number) {
-    await api(`/api/appointments/${id}/cancel`, { method: "PUT" });
-    loadAppointments();
+    try {
+      await api(`/api/appointments/${id}/cancel`, { method: "PUT" });
+      loadAppointments();
+    } catch {}
   }
 
   const statusBadge = (estado: string) => {

@@ -17,6 +17,7 @@ export function AdminDashboard() {
     const today = new Date().toISOString().split("T")[0];
     api<Appointment[]>(`/api/appointments?date=${today}`)
       .then(setAppointments)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

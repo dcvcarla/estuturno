@@ -22,7 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) {
+    const hasToken = (() => { try { return localStorage.getItem("accessToken"); } catch { return null; } })();
+    if (hasToken) {
       api<Admin>("/api/auth/me")
         .then(setAdmin)
         .catch(() => clearTokens())

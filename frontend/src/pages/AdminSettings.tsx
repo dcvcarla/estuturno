@@ -15,12 +15,14 @@ export function AdminSettings() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api<Commerce & { configuracionHorarios: string }>("/api/commerce").then((data) => {
-      setCommerce(data);
-      if (data.configuracionHorarios) {
-        setHorarios(JSON.parse(data.configuracionHorarios));
-      }
-    });
+    api<Commerce & { configuracionHorarios: string }>("/api/commerce")
+      .then((data) => {
+        setCommerce(data);
+        if (data.configuracionHorarios) {
+          try { setHorarios(JSON.parse(data.configuracionHorarios)); } catch {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   async function handleSave(e: FormEvent) {

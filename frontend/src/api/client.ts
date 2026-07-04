@@ -9,7 +9,7 @@ export class ApiError extends Error {
 }
 
 function getToken(): string | null {
-  return localStorage.getItem("accessToken");
+  try { return localStorage.getItem("accessToken"); } catch { return null; }
 }
 
 export async function api<T = unknown>(
@@ -36,11 +36,11 @@ export async function api<T = unknown>(
 }
 
 export function setTokens(accessToken: string, refreshToken: string) {
-  localStorage.setItem("accessToken", accessToken);
-  localStorage.setItem("refreshToken", refreshToken);
+  try { localStorage.setItem("accessToken", accessToken); } catch {}
+  try { localStorage.setItem("refreshToken", refreshToken); } catch {}
 }
 
 export function clearTokens() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
+  try { localStorage.removeItem("accessToken"); } catch {}
+  try { localStorage.removeItem("refreshToken"); } catch {}
 }

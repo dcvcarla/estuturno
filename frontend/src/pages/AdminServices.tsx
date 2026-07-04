@@ -20,7 +20,7 @@ export function AdminServices() {
   const [montoSena, setMontoSena] = useState("");
 
   function loadServices() {
-    api<Service[]>("/api/services").then(setServices);
+    api<Service[]>("/api/services").then(setServices).catch(() => {});
   }
 
   useEffect(() => { loadServices() }, []);
@@ -52,19 +52,22 @@ export function AdminServices() {
       montoSena: montoSena ? Number(montoSena) : null,
     };
 
-    if (editing) {
-      await api(`/api/services/${editing.id}`, { method: "PUT", body: JSON.stringify(body) });
-    } else {
-      await api("/api/services", { method: "POST", body: JSON.stringify(body) });
-    }
-
-    setShowForm(false);
-    loadServices();
+    try {
+      if (editing) {
+        await api(`/api/services/${editing.id}`, { method: "PUT", body: JSON.stringify(body) });
+      } else {
+        await api("/api/services", { method: "POST", body: JSON.stringify(body) });
+      }
+      setShowForm(false);
+      loadServices();
+    } catch {}
   }
 
   async function handleDelete(id: number) {
-    await api(`/api/services/${id}`, { method: "DELETE" });
-    loadServices();
+    try {
+      await api(`/api/services/${id}`, { method: "DELETE" });
+      loadServices();
+    } catch {}
   }
 
   const editModal = (

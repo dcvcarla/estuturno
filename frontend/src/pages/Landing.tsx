@@ -36,7 +36,8 @@ export function Landing() {
   async function selectService(s: Service) {
     setSelectedService(s);
     setStep("slots");
-    loadSlots(s.id, date);
+    setError("");
+    try { await loadSlots(s.id, date); } catch {}
   }
 
   async function loadSlots(serviceId: number, d: string) {
@@ -44,9 +45,9 @@ export function Landing() {
     setSlots(slots);
   }
 
-  function handleDateChange(d: string) {
+  async function handleDateChange(d: string) {
     setDate(d);
-    if (selectedService) loadSlots(selectedService.id, d);
+    if (selectedService) { try { await loadSlots(selectedService.id, d); } catch {} }
   }
 
   async function handleSubmit() {
@@ -64,15 +65,7 @@ export function Landing() {
       });
       setAppointmentId(apt.id);
 
-      if (selectedService?.montoSena && Number(selectedService.montoSena) > 0) {
-        const pref = await api<{ initPoint: string }>("/api/payments/create-preference", {
-          method: "POST",
-          body: JSON.stringify({ appointmentId: apt.id }),
-        });
-        window.location.href = pref.initPoint;
-      } else {
-        setStep("done");
-      }
+      setStep("done");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al reservar");
     }
