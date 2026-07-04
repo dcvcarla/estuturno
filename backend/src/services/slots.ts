@@ -4,6 +4,20 @@ interface WorkingHours {
   [day: string]: { inicio: string; fin: string }[];
 }
 
+function getDayHours(wh: WorkingHours, dateStr: string): { inicio: string; fin: string }[] {
+  const date = new Date(dateStr);
+  const dayNames = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+  const dayName = dayNames[date.getDay()];
+
+  const dateHours = wh[dateStr];
+  const dayHours = wh[dayName];
+
+  const result: { inicio: string; fin: string }[] = [];
+  if (Array.isArray(dayHours)) result.push(...dayHours);
+  if (Array.isArray(dateHours)) result.push(...dateHours);
+  return result;
+}
+
 export async function getAvailableSlots(commerceId: number, serviceId: number, dateStr: string) {
   const [commerce, service] = await Promise.all([
     prisma.commerce.findUnique({ where: { id: commerceId } }),
@@ -20,12 +34,8 @@ export async function getAvailableSlots(commerceId: number, serviceId: number, d
   }
 
   const workingHours: WorkingHours = JSON.parse(rawHours);
-  const date = new Date(dateStr);
-  const dayNames = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
-  const dayName = dayNames[date.getDay()];
-
-  const daySlots = workingHours[dayName];
-  if (!daySlots || daySlots.length === 0) {
+  const ranges = getDayHours(workingHours, dateStr);
+  if (ranges.length === 0) {
     return [];
   }
 
@@ -44,8 +54,9 @@ export async function getAvailableSlots(commerceId: number, serviceId: number, d
 
   const durationMs = service.duracionMinutos * 60 * 1000;
   const availableSlots: string[] = [];
+  const date = new Date(dateStr);
 
-  for (const range of daySlots) {
+  for (const range of ranges) {
     const [startH, startM] = range.inicio.split(":").map(Number);
     const [endH, endM] = range.fin.split(":").map(Number);
     const start = new Date(date);

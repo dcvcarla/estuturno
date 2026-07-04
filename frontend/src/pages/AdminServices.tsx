@@ -23,6 +23,9 @@ export function AdminServices() {
   const [montoSena, setMontoSena] = useState("");
   const [useCustomHours, setUseCustomHours] = useState(false);
   const [horarios, setHorarios] = useState<Record<string, { inicio: string; fin: string }[]>>({});
+  const [newDate, setNewDate] = useState("");
+  const [newDateInicio, setNewDateInicio] = useState("09:00");
+  const [newDateFin, setNewDateFin] = useState("18:00");
 
   function loadServices() {
     api<Service[]>("/api/services").then(setServices).catch(() => {});
@@ -119,32 +122,86 @@ export function AdminServices() {
     });
   }
 
+  const isDateKey = (k: string) => /^\d{4}-\d{2}-\d{2}$/.test(k);
+
+  function addSpecificDate() {
+    if (!newDate) return;
+    setHorarios((prev) => {
+      const existing = prev[newDate] || [];
+      const already = existing.some((s) => s.inicio === newDateInicio && s.fin === newDateFin);
+      if (already) return prev;
+      return { ...prev, [newDate]: [...existing, { inicio: newDateInicio, fin: newDateFin }] };
+    });
+  }
+
+  function removeSpecificDate(date: string, idx: number) {
+    setHorarios((prev) => {
+      const slots = (prev[date] || []).filter((_, i) => i !== idx);
+      if (slots.length === 0) {
+        const next = { ...prev };
+        delete next[date];
+        return next;
+      }
+      return { ...prev, [date]: slots };
+    });
+  }
+
+  const specificDates = Object.keys(horarios).filter(isDateKey);
+
   const hoursPicker = (
-    <div className="space-y-2">
-      {DAYS.map((day) => {
-        const isActive = !!horarios[day];
-        return (
-          <div key={day} className="pb-2 border-b border-gray-100 last:border-0">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={isActive} onChange={() => toggleDay(day)} className="rounded" />
-              <span className="capitalize text-sm font-medium">{day}</span>
-            </label>
-            {isActive && horarios[day]?.map((slot, idx) => (
-              <div key={idx} className="flex items-center gap-2 mt-1 ml-6">
-                <input type="time" value={slot.inicio} onChange={(e) => updateSlot(day, idx, "inicio", e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-28" />
-                <span className="text-sm">a</span>
-                <input type="time" value={slot.fin} onChange={(e) => updateSlot(day, idx, "fin", e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-28" />
-                <button type="button" onClick={() => removeSlot(day, idx)} className="text-red-500 text-sm">✕</button>
+    <div className="space-y-3">
+      <p className="text-sm font-medium">Días de la semana</p>
+      <div className="space-y-2">
+        {DAYS.map((day) => {
+          const isActive = !!horarios[day];
+          return (
+            <div key={day} className="pb-2 border-b border-gray-100 last:border-0">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={isActive} onChange={() => toggleDay(day)} className="rounded" />
+                <span className="capitalize text-sm font-medium">{day}</span>
+              </label>
+              {isActive && horarios[day]?.map((slot, idx) => (
+                <div key={idx} className="flex items-center gap-2 mt-1 ml-6">
+                  <input type="time" value={slot.inicio} onChange={(e) => updateSlot(day, idx, "inicio", e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-28" />
+                  <span className="text-sm">a</span>
+                  <input type="time" value={slot.fin} onChange={(e) => updateSlot(day, idx, "fin", e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-28" />
+                  <button type="button" onClick={() => removeSlot(day, idx)} className="text-red-500 text-sm">✕</button>
+                </div>
+              ))}
+              {isActive && (
+                <button type="button" onClick={() => addSlot(day)} className="text-indigo-600 text-xs mt-1 ml-6">
+                  + Agregar horario
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border-t pt-3">
+        <p className="text-sm font-medium mb-2">Fechas específicas</p>
+        {specificDates.map((date) => (
+          <div key={date} className="mb-2">
+            <p className="text-xs font-semibold text-gray-600 mb-1">{date}</p>
+            {horarios[date]?.map((slot, idx) => (
+              <div key={idx} className="flex items-center gap-2 ml-2 mb-1">
+                <span className="text-sm">{slot.inicio} a {slot.fin}</span>
+                <button type="button" onClick={() => removeSpecificDate(date, idx)} className="text-red-500 text-xs">✕</button>
               </div>
             ))}
-            {isActive && (
-              <button type="button" onClick={() => addSlot(day)} className="text-indigo-600 text-xs mt-1 ml-6">
-                + Agregar horario
-              </button>
-            )}
           </div>
-        );
-      })}
+        ))}
+        {specificDates.length === 0 && (
+          <p className="text-xs text-gray-400 mb-2">No hay fechas agregadas</p>
+        )}
+        <div className="flex items-center gap-2 mt-2">
+          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-36" />
+          <input type="time" value={newDateInicio} onChange={(e) => setNewDateInicio(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-24" />
+          <span className="text-xs">a</span>
+          <input type="time" value={newDateFin} onChange={(e) => setNewDateFin(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm w-24" />
+          <button type="button" onClick={addSpecificDate} className="bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700">Agregar</button>
+        </div>
+      </div>
     </div>
   );
 
