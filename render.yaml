@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npx tsc
-    startCommand: npx prisma db push && npx prisma db seed && node dist/index.js
+    startCommand: npx prisma db push && node dist/index.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
@@ -20,6 +20,10 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     rootDir: frontend
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         value: https://estuturno-backend.onrender.com
