@@ -4,16 +4,23 @@ import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
+function serializeService(s: any) {
+  return {
+    ...s,
+    configuracionHorarios: s.configuracionHorarios ? JSON.parse(s.configuracionHorarios) : null,
+  };
+}
+
 router.get("/", authenticate, async (req: Request, res: Response) => {
   const services = await prisma.service.findMany({
     where: { commerceId: req.admin!.commerceId },
     orderBy: { nombre: "asc" },
   });
-  res.json(services);
+  res.json(services.map(serializeService));
 });
 
 router.post("/", authenticate, async (req: Request, res: Response) => {
-  const { nombre, duracionMinutos, precio, montoSena } = req.body;
+  const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
 
   if (!nombre || !duracionMinutos || precio === undefined) {
     return res.status(400).json({ error: "Nombre, duracionMinutos and precio required" });
@@ -26,14 +33,15 @@ router.post("/", authenticate, async (req: Request, res: Response) => {
       duracionMinutos,
       precio,
       montoSena: montoSena || null,
+      ...(configuracionHorarios !== undefined && { configuracionHorarios: JSON.stringify(configuracionHorarios) }),
     },
   });
 
-  res.status(201).json(service);
+  res.status(201).json(serializeService(service));
 });
 
 router.put("/:id", authenticate, async (req: Request, res: Response) => {
-  const { nombre, duracionMinutos, precio, montoSena } = req.body;
+  const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
   const id = Number(req.params.id);
 
   const service = await prisma.service.updateMany({
@@ -43,6 +51,7 @@ router.put("/:id", authenticate, async (req: Request, res: Response) => {
       ...(duracionMinutos !== undefined && { duracionMinutos }),
       ...(precio !== undefined && { precio }),
       ...(montoSena !== undefined && { montoSena }),
+      ...(configuracionHorarios !== undefined && { configuracionHorarios: JSON.stringify(configuracionHorarios) }),
     },
   });
 
@@ -50,7 +59,7 @@ router.put("/:id", authenticate, async (req: Request, res: Response) => {
     return res.status(404).json({ error: "Service not found" });
   }
 
-  res.json(await prisma.service.findUnique({ where: { id } }));
+  res.json(serializeService(await prisma.service.findUnique({ where: { id } })));
 });
 
 router.delete("/:id", authenticate, async (req: Request, res: Response) => {
@@ -71,11 +80,10 @@ router.get("/public", async (req: Request, res: Response) => {
 
   const services = await prisma.service.findMany({
     where: { commerceId: req.commerce.id, activo: true },
-    select: { id: true, nombre: true, duracionMinutos: true, precio: true, montoSena: true },
     orderBy: { nombre: "asc" },
   });
 
-  res.json(services);
+  res.json(services.map(serializeService));
 });
 
 export default router;

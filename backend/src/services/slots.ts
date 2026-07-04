@@ -5,23 +5,27 @@ interface WorkingHours {
 }
 
 export async function getAvailableSlots(commerceId: number, serviceId: number, dateStr: string) {
-  const commerce = await prisma.commerce.findUnique({ where: { id: commerceId } });
-  if (!commerce?.configuracionHorarios) {
+  const [commerce, service] = await Promise.all([
+    prisma.commerce.findUnique({ where: { id: commerceId } }),
+    prisma.service.findUnique({ where: { id: serviceId } }),
+  ]);
+
+  if (!service || !service.activo) {
     return [];
   }
 
-  const workingHours: WorkingHours = JSON.parse(commerce.configuracionHorarios);
+  const rawHours = service.configuracionHorarios || commerce?.configuracionHorarios;
+  if (!rawHours) {
+    return [];
+  }
+
+  const workingHours: WorkingHours = JSON.parse(rawHours);
   const date = new Date(dateStr);
   const dayNames = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
   const dayName = dayNames[date.getDay()];
 
   const daySlots = workingHours[dayName];
   if (!daySlots || daySlots.length === 0) {
-    return [];
-  }
-
-  const service = await prisma.service.findUnique({ where: { id: serviceId } });
-  if (!service || !service.activo) {
     return [];
   }
 

@@ -31,6 +31,7 @@ model Service {
   duracionMinutos Int     @map("duracion_minutos")
   precio         Decimal  @db.Decimal(10, 2)
   montoSena      Decimal? @map("monto_seña") @db.Decimal(10, 2)
+  configuracionHorarios String? @map("configuracion_horarios") @db.Text
   activo         Boolean  @default(true)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
