@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
@@ -38,6 +37,18 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api", paymentRoutes);
 
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err.message === "DOUBLE_BOOKING") {
+    return res.status(409).json({ error: "El horario seleccionado ya está reservado" });
+  }
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal server error" });
+});
+
 io.on("connection", (socket: import("socket.io").Socket) => {
   console.log("Client connected:", socket.id);
 
@@ -48,24 +59,6 @@ io.on("connection", (socket: import("socket.io").Socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
-});
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
-const frontendDist = path.join(__dirname, "public");
-app.use(express.static(frontendDist));
-app.use((_req, res) => {
-  res.sendFile(path.join(frontendDist, "index.html"));
-});
-
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  if (err.message === "DOUBLE_BOOKING") {
-    return res.status(409).json({ error: "El horario seleccionado ya está reservado" });
-  }
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal server error" });
 });
 
 httpServer.listen(PORT, () => {
