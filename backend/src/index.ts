@@ -54,7 +54,7 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-const frontendDist = path.join(__dirname, "..", "..", "frontend", "dist");
+const frontendDist = path.join(__dirname, "public");
 app.use(express.static(frontendDist));
 app.use((_req, res) => {
   res.sendFile(path.join(frontendDist, "index.html"));
