@@ -15,13 +15,11 @@ declare global {
 }
 
 export async function resolveCommerce(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
   if (
     req.path.startsWith("/api/auth") ||
     req.path.startsWith("/api/health") ||
     req.path.startsWith("/admin") ||
-    req.path.startsWith("/api/webhooks") ||
-    (authHeader && authHeader.startsWith("Bearer "))
+    req.path.startsWith("/api/webhooks")
   ) {
     return next();
   }
