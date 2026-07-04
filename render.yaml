@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npx tsc
-    startCommand: npx prisma db push && node dist/index.js
+    startCommand: npx prisma db push && npx prisma db seed && node dist/index.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
