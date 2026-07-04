@@ -20,6 +20,34 @@ router.get("/slots", async (req: Request, res: Response) => {
   res.json(slots);
 });
 
+router.get("/available-dates", async (req: Request, res: Response) => {
+  if (!req.commerce) {
+    return res.status(404).json({ error: "Commerce not found" });
+  }
+
+  const { service_id, days: daysStr } = req.query;
+  if (!service_id) {
+    return res.status(400).json({ error: "service_id required" });
+  }
+
+  const days = Math.min(Math.max(Number(daysStr) || 30, 1), 60);
+  const dates: string[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split("T")[0];
+    const slots = await getAvailableSlots(req.commerce.id, Number(service_id), dateStr);
+    if (slots.length > 0) {
+      dates.push(dateStr);
+    }
+  }
+
+  res.json(dates);
+});
+
 router.post("/", async (req: Request, res: Response) => {
   if (!req.commerce) {
     return res.status(404).json({ error: "Commerce not found" });
