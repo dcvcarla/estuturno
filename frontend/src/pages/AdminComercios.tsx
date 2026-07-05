@@ -19,6 +19,18 @@ export function AdminComercios() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ nombre: "", dominio: "", telefonoWhatsapp: "", adminEmail: "", adminPassword: "", adminNombre: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  function generatePassword() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+    let pwd = "";
+    for (let i = 0; i < 16; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setForm({ ...form, adminPassword: pwd });
+    setConfirmPassword(pwd);
+  }
 
   useEffect(() => {
     api<Commerce[]>("/api/commerce/list")
@@ -30,6 +42,10 @@ export function AdminComercios() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (form.adminPassword !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
     try {
       const commerce = await api<Commerce>("/api/commerce", {
         method: "POST",
@@ -38,6 +54,8 @@ export function AdminComercios() {
       setCommerces((prev) => [...prev, commerce as any]);
       setShowModal(false);
       setForm({ nombre: "", dominio: "", telefonoWhatsapp: "", adminEmail: "", adminPassword: "", adminNombre: "" });
+      setConfirmPassword("");
+      setShowPassword(false);
     } catch (err: any) {
       setError(err.message);
     }
@@ -140,10 +158,24 @@ export function AdminComercios() {
               <input placeholder="Dominio (ej: mipelu.com)" value={form.dominio} onChange={(e) => setForm({ ...form, dominio: e.target.value })} className="w-full border rounded px-3 py-2" required />
               <input placeholder="Teléfono WhatsApp (opcional)" value={form.telefonoWhatsapp} onChange={(e) => setForm({ ...form, telefonoWhatsapp: e.target.value })} className="w-full border rounded px-3 py-2" />
               <input placeholder="Email del admin" type="email" value={form.adminEmail} onChange={(e) => setForm({ ...form, adminEmail: e.target.value })} className="w-full border rounded px-3 py-2" required />
-              <input placeholder="Contraseña del admin" type="password" value={form.adminPassword} onChange={(e) => setForm({ ...form, adminPassword: e.target.value })} className="w-full border rounded px-3 py-2" required />
+              <div className="relative">
+                <input placeholder="Contraseña del admin" type={showPassword ? "text" : "password"} value={form.adminPassword} onChange={(e) => setForm({ ...form, adminPassword: e.target.value })} className="w-full border rounded px-3 py-2 pr-10" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-lg">
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input placeholder="Repetir contraseña" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="flex-1 border rounded px-3 py-2" required />
+                <button type="button" onClick={generatePassword} className="px-3 py-2 bg-gray-100 border rounded text-sm text-gray-600 hover:bg-gray-200 whitespace-nowrap">
+                  Generar
+                </button>
+              </div>
+              {form.adminPassword && confirmPassword && form.adminPassword !== confirmPassword && (
+                <p className="text-red-500 text-xs">Las contraseñas no coinciden</p>
+              )}
               <input placeholder="Nombre del admin (opcional)" value={form.adminNombre} onChange={(e) => setForm({ ...form, adminNombre: e.target.value })} className="w-full border rounded px-3 py-2" />
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                <button type="button" onClick={() => { setShowModal(false); setConfirmPassword(""); setShowPassword(false); }} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
                 <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Crear</button>
               </div>
             </form>
