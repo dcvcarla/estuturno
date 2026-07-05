@@ -7,6 +7,7 @@ interface Admin {
   nombre: string | null;
   commerceId: number | null;
   role: string;
+  impersonating?: boolean;
 }
 
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshAdmin: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -48,8 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdmin(null);
   }, []);
 
+  const refreshAdmin = useCallback(async () => {
+    try {
+      const a = await api<Admin>("/api/auth/me");
+      setAdmin(a);
+    } catch {
+      clearTokens();
+      setAdmin(null);
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ admin, loading, login, logout }}>
+    <AuthContext.Provider value={{ admin, loading, login, logout, refreshAdmin }}>
       {children}
     </AuthContext.Provider>
   );

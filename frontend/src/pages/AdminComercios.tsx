@@ -12,8 +12,14 @@ interface Commerce {
   _count: { services: number; appointments: number };
 }
 
+interface CommerceAdmin {
+  id: number;
+  email: string;
+  nombre: string | null;
+}
+
 export function AdminComercios() {
-  const { admin } = useAuth();
+  const { admin, refreshAdmin } = useAuth();
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -21,6 +27,15 @@ export function AdminComercios() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [editTarget, setEditTarget] = useState<Commerce | null>(null);
+  const [editForm, setEditForm] = useState({ nombre: "", dominio: "", telefonoWhatsapp: "" });
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const [resetTarget, setResetTarget] = useState<{ commerceId: number; admins: CommerceAdmin[] } | null>(null);
+  const [resetAdminId, setResetAdminId] = useState<number | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [showResetModal, setShowResetModal] = useState(false);
 
   function generatePassword() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
@@ -84,6 +99,52 @@ export function AdminComercios() {
     }
   }
 
+  async function handleEdit(commerce: Commerce) {
+    setEditTarget(commerce);
+    setEditForm({ nombre: commerce.nombre, dominio: commerce.dominio, telefonoWhatsapp: commerce.telefonoWhatsapp || "" });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTarget) return;
+    try {
+      await api(`/api/commerce/${editTarget.id}`, { method: "PUT", body: JSON.stringify(editForm) });
+      setCommerces((prev) => prev.map((c) => c.id === editTarget.id ? { ...c, nombre: editForm.nombre, dominio: editForm.dominio, telefonoWhatsapp: editForm.telefonoWhatsapp || null } : c));
+      setShowEditModal(false);
+      setEditTarget(null);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
+  async function handleOpenReset(commerceId: number) {
+    try {
+      const admins = await api<CommerceAdmin[]>(`/api/commerce/${commerceId}/admins`);
+      setResetTarget({ commerceId, admins });
+      setResetAdminId(admins[0]?.id || null);
+      setResetPassword("");
+      setShowResetModal(true);
+    } catch {
+      alert("Error al obtener admins");
+    }
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetTarget || !resetAdminId || !resetPassword) return;
+    try {
+      await api(`/api/commerce/${resetTarget.commerceId}/reset-password`, {
+        method: "PUT",
+        body: JSON.stringify({ adminId: resetAdminId, newPassword: resetPassword }),
+      });
+      setShowResetModal(false);
+      alert("Contraseña actualizada");
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
   if (admin?.role !== "owner") {
     return <p className="text-gray-500">Acceso restringido a owners.</p>;
   }
@@ -130,10 +191,22 @@ export function AdminComercios() {
                 <td className="px-4 py-3 text-sm">{c.phoneNumberId ? "✅" : "—"}</td>
                 <td className="px-4 py-3 text-sm space-x-2">
                   <button
+                    onClick={() => handleEdit(c)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Editar
+                  </button>
+                  <button
                     onClick={() => handleImpersonate(c.id)}
                     className="text-indigo-600 hover:text-indigo-800"
                   >
                     Ver como manager
+                  </button>
+                  <button
+                    onClick={() => handleOpenReset(c.id)}
+                    className="text-orange-600 hover:text-orange-800"
+                  >
+                    Reset pass
                   </button>
                   <button
                     onClick={() => handleDelete(c.id)}
@@ -182,6 +255,43 @@ export function AdminComercios() {
           </div>
         </div>
       )}
+      {showEditModal && editTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Editar comercio</h2>
+            <form onSubmit={handleSaveEdit} className="space-y-3">
+              <input placeholder="Nombre del negocio" value={editForm.nombre} onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })} className="w-full border rounded px-3 py-2" required />
+              <input placeholder="Dominio" value={editForm.dominio} onChange={(e) => setEditForm({ ...editForm, dominio: e.target.value })} className="w-full border rounded px-3 py-2" required />
+              <input placeholder="Teléfono WhatsApp" value={editForm.telefonoWhatsapp} onChange={(e) => setEditForm({ ...editForm, telefonoWhatsapp: e.target.value })} className="w-full border rounded px-3 py-2" />
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => { setShowEditModal(false); setEditTarget(null); }} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showResetModal && resetTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Resetear contraseña</h2>
+            <form onSubmit={handleResetPassword} className="space-y-3">
+              <select value={resetAdminId ?? ""} onChange={(e) => setResetAdminId(Number(e.target.value))} className="w-full border rounded px-3 py-2" required>
+                {resetTarget.admins.map((a) => (
+                  <option key={a.id} value={a.id}>{a.email} ({a.nombre || "sin nombre"})</option>
+                ))}
+              </select>
+              <input placeholder="Nueva contraseña" type="text" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} className="w-full border rounded px-3 py-2" required />
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowResetModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

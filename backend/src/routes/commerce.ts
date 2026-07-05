@@ -122,4 +122,51 @@ router.delete("/:id", authenticate, requireOwner, async (req: Request, res: Resp
   res.json({ message: "Commerce deleted" });
 });
 
+router.get("/:id/admins", authenticate, requireOwner, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const admins = await prisma.admin.findMany({
+    where: { commerceId: id },
+    select: { id: true, email: true, nombre: true },
+  });
+  res.json(admins);
+});
+
+router.put("/:id", authenticate, requireOwner, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const { nombre, dominio, telefonoWhatsapp } = req.body;
+
+  if (dominio) {
+    const existing = await prisma.commerce.findFirst({ where: { dominio, NOT: { id } } });
+    if (existing) return res.status(409).json({ error: "Dominio already in use" });
+  }
+
+  const commerce = await prisma.commerce.update({
+    where: { id },
+    data: {
+      ...(nombre !== undefined && { nombre }),
+      ...(dominio !== undefined && { dominio }),
+      ...(telefonoWhatsapp !== undefined && { telefonoWhatsapp: telefonoWhatsapp || null }),
+    },
+  });
+
+  res.json(commerce);
+});
+
+router.put("/:id/reset-password", authenticate, requireOwner, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const { adminId, newPassword } = req.body;
+
+  if (!adminId || !newPassword) {
+    return res.status(400).json({ error: "adminId and newPassword required" });
+  }
+
+  const admin = await prisma.admin.findFirst({ where: { id: adminId, commerceId: id } });
+  if (!admin) return res.status(404).json({ error: "Admin not found in this commerce" });
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.admin.update({ where: { id: adminId }, data: { passwordHash } });
+
+  res.json({ message: "Password updated" });
+});
+
 export default router;

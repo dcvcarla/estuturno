@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { api, setTokens } from "../api/client";
 
 const managerLinks = [
   { to: "/gestion", label: "Dashboard", end: true },
@@ -14,10 +15,22 @@ const ownerLinks = [
 ];
 
 export function AdminLayout() {
-  const { admin, logout } = useAuth();
+  const { admin, logout, refreshAdmin } = useAuth();
   const navigate = useNavigate();
   const isOwner = admin?.role === "owner";
+  const isImpersonating = admin?.impersonating;
   const links = isOwner ? ownerLinks : managerLinks;
+
+  async function handleUnimpersonate() {
+    try {
+      const data = await api<{ accessToken: string; refreshToken: string }>("/api/auth/unimpersonate", { method: "POST" });
+      setTokens(data.accessToken, data.refreshToken);
+      await refreshAdmin();
+      navigate("/gestion");
+    } catch {
+      alert("Error al volver a owner");
+    }
+  }
 
   function handleLogout() {
     logout();
@@ -48,7 +61,15 @@ export function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-indigo-800">
+        <div className="p-4 border-t border-indigo-800 space-y-2">
+          {isImpersonating && (
+            <button
+              onClick={handleUnimpersonate}
+              className="w-full text-left text-yellow-300 hover:text-yellow-100 transition text-sm"
+            >
+              ← Volver a panel owner
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="w-full text-left text-indigo-300 hover:text-white transition"

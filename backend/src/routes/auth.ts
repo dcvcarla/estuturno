@@ -39,9 +39,10 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
 router.get("/me", authenticate, async (req: Request, res: Response) => {
   const admin = await prisma.admin.findUnique({
     where: { id: req.admin!.adminId },
-    select: { id: true, email: true, nombre: true, commerceId: true, role: true },
+    select: { id: true, email: true, nombre: true, role: true },
   });
-  res.json(admin);
+  const impersonating = admin?.role === "owner" && req.admin!.role === "manager";
+  res.json({ ...admin, commerceId: req.admin!.commerceId, role: req.admin!.role, impersonating });
 });
 
 router.post("/impersonate", authenticate, requireOwner, async (req: Request, res: Response) => {
@@ -56,6 +57,17 @@ router.post("/impersonate", authenticate, requireOwner, async (req: Request, res
   }
 
   const payload = { adminId: req.admin!.adminId, commerceId, role: "manager" };
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+
+  res.json({ accessToken, refreshToken });
+});
+
+router.post("/unimpersonate", authenticate, async (req: Request, res: Response) => {
+  const admin = await prisma.admin.findUnique({ where: { id: req.admin!.adminId } });
+  if (!admin) return res.status(404).json({ error: "Admin not found" });
+
+  const payload = { adminId: admin.id, commerceId: admin.commerceId, role: admin.role };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
