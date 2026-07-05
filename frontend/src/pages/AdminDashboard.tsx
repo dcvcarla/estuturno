@@ -30,7 +30,8 @@ function ManagerDashboard() {
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
-    api<Appointment[]>(`/api/appointments?date=${today}`)
+    const future = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    api<Appointment[]>(`/api/appointments?from=${today}&to=${future}`)
       .then(setAppointments)
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -67,11 +68,12 @@ function ManagerDashboard() {
           <p className="text-3xl font-bold text-red-800">{counts.cancelado}</p>
         </div>
       </div>
-      <h2 className="text-lg font-semibold mb-3">Turnos de hoy</h2>
+      <h2 className="text-lg font-semibold mb-3">Próximos turnos</h2>
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicio</th>
@@ -81,11 +83,12 @@ function ManagerDashboard() {
           <tbody className="divide-y divide-gray-200">
             {appointments.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">No hay turnos para hoy</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No hay próximos turnos</td>
               </tr>
             )}
             {appointments.map((apt) => (
               <tr key={apt.id}>
+                <td className="px-4 py-3 text-sm">{new Date(apt.fechaHoraInicio).toLocaleDateString("es-AR")}</td>
                 <td className="px-4 py-3 text-sm">
                   {new Date(apt.fechaHoraInicio).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
                 </td>

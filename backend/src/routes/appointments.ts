@@ -103,13 +103,18 @@ router.post("/", validate(appointmentCreateSchema), async (req: Request, res: Re
 });
 
 router.get("/", authenticate, async (req: Request, res: Response) => {
-  const { date, estado } = req.query;
+  const { date, estado, from, to } = req.query;
 
   const where: any = { commerceId: req.admin!.commerceId! };
   if (date) {
     where.fechaHoraInicio = {
       gte: new Date(`${String(date)}T00:00:00`),
       lt: new Date(`${String(date)}T23:59:59`),
+    };
+  } else if (from) {
+    where.fechaHoraInicio = {
+      gte: new Date(`${String(from)}T00:00:00`),
+      ...(to ? { lt: new Date(`${String(to)}T23:59:59`) } : {}),
     };
   }
   if (estado) {
