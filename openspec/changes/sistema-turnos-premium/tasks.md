@@ -3,7 +3,7 @@
 - [ ] 1.1 Endpoint GET /api/webhooks/whatsapp para verificación de Meta
 - [ ] 1.2 Endpoint POST /api/webhooks/whatsapp para recibir mensajes
 - [ ] 1.3 Middleware para identificar commerce por phone_number_id
-- [ ] 2.1 Lógica de mensaje inicial con botones
+- [x] 2.1 Lógica de mensaje inicial con botones
 - [ ] 2.2 Lista de servicios por WhatsApp
 - [ ] 2.3 Slots disponibles por WhatsApp
 - [ ] 2.4 Registro de turno vía WhatsApp

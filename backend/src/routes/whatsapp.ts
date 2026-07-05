@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { sendWhatsAppMessage, buildGreetingButtons } from "../services/whatsapp";
 
 const router = Router();
 
@@ -40,12 +41,41 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
       select: { id: true, nombre: true, whatsappToken: true, telefonoWhatsapp: true },
     });
 
-    if (!commerce) {
-      console.error(`No commerce found for phone_number_id: ${phoneNumberId}`);
+    if (!commerce || !commerce.whatsappToken) {
+      console.error(`No commerce or token for phone_number_id: ${phoneNumberId}`);
       return res.sendStatus(200);
     }
 
-    console.log(`WhatsApp webhook for commerce ${commerce.id} (${commerce.nombre})`);
+    const messages = value?.messages;
+    if (!messages || messages.length === 0) {
+      return res.sendStatus(200);
+    }
+
+    for (const msg of messages) {
+      const from = msg.from;
+      const msgType = msg.type;
+
+      if (msgType === "text") {
+        const text = (msg.text?.body || "").toLowerCase().trim();
+
+        if (["hola", "buenas", "hey", "hi", "hello", "buenos días", "buenas tardes"].includes(text)) {
+          await sendWhatsAppMessage(
+            phoneNumberId,
+            commerce.whatsappToken,
+            from,
+            buildGreetingButtons()
+          );
+        }
+      } else if (msgType === "interactive") {
+        const replyId = msg.interactive?.button_reply?.id;
+
+        if (replyId === "reservar") {
+          console.log(`Comercio ${commerce.id}: cliente ${from} quiere reservar`);
+        } else if (replyId === "cancelar") {
+          console.log(`Comercio ${commerce.id}: cliente ${from} quiere cancelar`);
+        }
+      }
+    }
 
     res.sendStatus(200);
   } catch (err) {
