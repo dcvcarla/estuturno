@@ -3,6 +3,7 @@ import prisma from "../utils/prisma";
 import { authenticate } from "../middleware/auth";
 import { getAvailableSlots } from "../services/slots";
 import { validate, appointmentCreateSchema } from "../middleware/validate";
+import { sendWhatsAppMessage, buildTextMessage } from "../services/whatsapp";
 import { io } from "../index";
 
 const router = Router();
@@ -139,6 +140,66 @@ router.put("/:id/cancel", authenticate, async (req: Request, res: Response) => {
   io.to(`commerce:${req.admin!.commerceId}`).emit("appointment:cancelled", { id });
 
   res.json({ message: "Appointment cancelled" });
+});
+
+router.post("/:id/cancel-and-refund", authenticate, async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  const appointment = await prisma.appointment.findFirst({
+    where: { id, commerceId: req.admin!.commerceId },
+    include: { commerce: true, service: { select: { nombre: true } } },
+  });
+
+  if (!appointment) {
+    return res.status(404).json({ error: "Appointment not found" });
+  }
+
+  if (appointment.estado === "cancelado") {
+    return res.status(400).json({ error: "Appointment already cancelled" });
+  }
+
+  try {
+    if (appointment.mpPaymentId && appointment.commerce.mpAccessToken) {
+      const refundRes = await fetch(`https://api.mercadopago.com/v1/payments/${appointment.mpPaymentId}/refunds`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${appointment.commerce.mpAccessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!refundRes.ok) {
+        const errBody = await refundRes.text();
+        console.error("MP refund error:", errBody);
+        return res.status(502).json({ error: "Failed to process refund with Mercado Pago" });
+      }
+    }
+
+    await prisma.appointment.update({
+      where: { id },
+      data: { estado: "cancelado" },
+    });
+
+    io.to(`commerce:${req.admin!.commerceId}`).emit("appointment:cancelled", { id });
+
+    if (appointment.commerce.phoneNumberId && appointment.commerce.whatsappToken) {
+      sendWhatsAppMessage(
+        appointment.commerce.phoneNumberId,
+        appointment.commerce.whatsappToken,
+        appointment.telefonoCliente,
+        buildTextMessage(
+          `❌ Tu turno del ${appointment.fechaHoraInicio.toLocaleDateString("es-AR")} a las ${appointment.fechaHoraInicio.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} fue cancelado.\n\n${
+            appointment.mpPaymentId ? "💰 El reembolso de la seña fue procesado." : ""
+          }\n\nDisculpá las molestias.`
+        )
+      ).catch((e) => console.error("WhatsApp notify error:", e));
+    }
+
+    res.json({ message: "Appointment cancelled and refunded" });
+  } catch (err) {
+    console.error("Cancel-and-refund error:", err);
+    res.status(500).json({ error: "Failed to cancel and refund" });
+  }
 });
 
 export default router;

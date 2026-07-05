@@ -38,3 +38,65 @@ export function buildGreetingButtons() {
     },
   };
 }
+
+export function buildServiceList(services: { id: number; nombre: string; precio: number }[]) {
+  return {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: { type: "text", text: "Nuestros Servicios" },
+      body: { text: "Seleccioná un servicio:" },
+      footer: { text: "Elegí de la lista" },
+      action: {
+        button: "Ver servicios",
+        sections: [
+          {
+            title: "Disponibles",
+            rows: services.map((s) => ({
+              id: `servicio_${s.id}`,
+              title: s.nombre,
+              description: `$${Number(s.precio).toLocaleString("es-AR")}`,
+            })),
+          },
+        ],
+      },
+    },
+  };
+}
+
+export function buildDateButtons(dates: string[]) {
+  return {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: "Elegí un día disponible:" },
+      action: {
+        buttons: dates.map((d) => {
+          const date = new Date(d + "T12:00:00Z");
+          const label = date.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
+          return { type: "reply", reply: { id: `fecha_${d}`, title: label } };
+        }),
+      },
+    },
+  };
+}
+
+export function buildSlotButtons(slots: string[]) {
+  return {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: "Elegí un horario:" },
+      action: {
+        buttons: slots.slice(0, 10).map((s) => ({
+          type: "reply",
+          reply: { id: `hora_${s}`, title: s },
+        })),
+      },
+    },
+  };
+}
+
+export function buildTextMessage(text: string) {
+  return { type: "text", text: { body: text } };
+}

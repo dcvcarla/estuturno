@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { createPaymentPreference } from "../services/mercadopago";
 import { validate, paymentPreferenceSchema } from "../middleware/validate";
+import { sendWhatsAppMessage, buildTextMessage } from "../services/whatsapp";
 import { io } from "../index";
 
 const router = Router();
@@ -89,10 +90,21 @@ router.post("/webhooks/mercadopago", async (req: Request, res: Response) => {
           estado: "confirmado",
           mpPaymentId: paymentId,
         },
-        include: { commerce: true },
+        include: { commerce: true, service: { select: { nombre: true } } },
       });
 
       io.to(`commerce:${appointment.commerceId}`).emit("appointment:confirmed", appointment);
+
+      if (appointment.commerce.phoneNumberId && appointment.commerce.whatsappToken) {
+        sendWhatsAppMessage(
+          appointment.commerce.phoneNumberId,
+          appointment.commerce.whatsappToken,
+          appointment.telefonoCliente,
+          buildTextMessage(
+            `✅ Pago confirmado, ${appointment.nombreCliente}!\n\n📅 ${appointment.fechaHoraInicio.toLocaleDateString("es-AR")} a las ${appointment.fechaHoraInicio.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}\n💇 ${appointment.service.nombre}\n\nTe esperamos!`
+          )
+        ).catch((e) => console.error("WhatsApp notify error:", e));
+      }
     }
 
     res.sendStatus(200);

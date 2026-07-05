@@ -4,15 +4,15 @@
 - [ ] 1.2 Endpoint POST /api/webhooks/whatsapp para recibir mensajes
 - [ ] 1.3 Middleware para identificar commerce por phone_number_id
 - [x] 2.1 Lógica de mensaje inicial con botones
-- [ ] 2.2 Lista de servicios por WhatsApp
-- [ ] 2.3 Slots disponibles por WhatsApp
-- [ ] 2.4 Registro de turno vía WhatsApp
-- [ ] 3.1 Notificación de confirmación por WhatsApp
-- [ ] 3.2 Pase a humano
-- [ ] 4.1 Endpoint cancel-and-refund
-- [ ] 4.2 Conexión con API de Refunds de MP
-- [ ] 4.3 Actualizar estado al recibir confirmación
-- [ ] 4.4 Notificación de cancelación/reembolso por WhatsApp
+- [x] 2.2 Lista de servicios por WhatsApp
+- [x] 2.3 Slots disponibles por WhatsApp
+- [x] 2.4 Registro de turno vía WhatsApp
+- [x] 3.1 Notificación de confirmación por WhatsApp
+- [x] 3.2 Pase a humano
+- [x] 4.1 Endpoint cancel-and-refund
+- [x] 4.2 Conexión con API de Refunds de MP
+- [x] 4.3 Actualizar estado al recibir confirmación
+- [x] 4.4 Notificación de cancelación/reembolso por WhatsApp
 
 ## 1. Setup del proyecto
 
