@@ -19,7 +19,13 @@ dotenv.config();
 
 async function autoSeed() {
   const existing = await prisma.commerce.findUnique({ where: { dominio: "estuturno-backend.onrender.com" } });
-  if (existing) return;
+  if (existing) {
+    await prisma.admin.updateMany({
+      where: { email: "admin@test.com", role: { not: "owner" } },
+      data: { role: "owner" },
+    });
+    return;
+  }
 
   const passwordHash = await bcrypt.hash("admin123", 10);
   const commerce = await prisma.commerce.create({
