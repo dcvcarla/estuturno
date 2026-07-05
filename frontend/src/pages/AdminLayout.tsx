@@ -1,20 +1,27 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const links = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/agenda", label: "Agenda" },
-  { to: "/admin/servicios", label: "Servicios" },
-  { to: "/admin/configuracion", label: "Configuración" },
+const managerLinks = [
+  { to: "/gestion", label: "Dashboard", end: true },
+  { to: "/gestion/agenda", label: "Agenda" },
+  { to: "/gestion/servicios", label: "Servicios" },
+  { to: "/gestion/configuracion", label: "Configuración" },
+];
+
+const ownerLinks = [
+  { to: "/gestion", label: "Dashboard", end: true },
+  { to: "/gestion/comercios", label: "Comercios" },
 ];
 
 export function AdminLayout() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const isOwner = admin?.role === "owner";
+  const links = isOwner ? ownerLinks : managerLinks;
 
   function handleLogout() {
     logout();
-    navigate("/admin/login");
+    navigate("/gestion/login");
   }
 
   return (
@@ -23,6 +30,7 @@ export function AdminLayout() {
         <div className="p-4 border-b border-indigo-800">
           <h1 className="text-xl font-bold">EsTuTurno</h1>
           <p className="text-sm text-indigo-300 mt-1">{admin?.nombre || admin?.email}</p>
+          {isOwner && <span className="text-xs text-yellow-300 mt-1 block">Owner</span>}
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {links.map((link) => (

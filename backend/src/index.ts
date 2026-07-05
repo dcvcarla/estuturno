@@ -41,7 +41,7 @@ async function autoSeed() {
   });
 
   await prisma.admin.create({
-    data: { commerceId: commerce.id, email: "admin@test.com", passwordHash, nombre: "Admin" },
+    data: { commerceId: commerce.id, email: "admin@test.com", passwordHash, nombre: "Admin", role: "owner" },
   });
 
   await prisma.service.createMany({

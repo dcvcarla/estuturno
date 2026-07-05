@@ -105,7 +105,7 @@ router.post("/", validate(appointmentCreateSchema), async (req: Request, res: Re
 router.get("/", authenticate, async (req: Request, res: Response) => {
   const { date, estado } = req.query;
 
-  const where: any = { commerceId: req.admin!.commerceId };
+  const where: any = { commerceId: req.admin!.commerceId! };
   if (date) {
     where.fechaHoraInicio = {
       gte: new Date(`${String(date)}T00:00:00`),
@@ -129,7 +129,7 @@ router.put("/:id/cancel", authenticate, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
 
   const appointment = await prisma.appointment.updateMany({
-    where: { id, commerceId: req.admin!.commerceId },
+    where: { id, commerceId: req.admin!.commerceId! },
     data: { estado: "cancelado" },
   });
 
@@ -137,7 +137,7 @@ router.put("/:id/cancel", authenticate, async (req: Request, res: Response) => {
     return res.status(404).json({ error: "Appointment not found" });
   }
 
-  io.to(`commerce:${req.admin!.commerceId}`).emit("appointment:cancelled", { id });
+  io.to(`commerce:${req.admin!.commerceId!}`).emit("appointment:cancelled", { id });
 
   res.json({ message: "Appointment cancelled" });
 });
@@ -146,7 +146,7 @@ router.post("/:id/cancel-and-refund", authenticate, async (req: Request, res: Re
   const id = Number(req.params.id);
 
   const appointment = await prisma.appointment.findFirst({
-    where: { id, commerceId: req.admin!.commerceId },
+    where: { id, commerceId: req.admin!.commerceId! },
     include: { commerce: true, service: { select: { nombre: true } } },
   });
 
@@ -180,7 +180,7 @@ router.post("/:id/cancel-and-refund", authenticate, async (req: Request, res: Re
       data: { estado: "cancelado" },
     });
 
-    io.to(`commerce:${req.admin!.commerceId}`).emit("appointment:cancelled", { id });
+    io.to(`commerce:${req.admin!.commerceId!}`).emit("appointment:cancelled", { id });
 
     if (appointment.commerce.phoneNumberId && appointment.commerce.whatsappToken) {
       sendWhatsAppMessage(

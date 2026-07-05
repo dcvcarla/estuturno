@@ -1,8 +1,21 @@
+## FASE 3 — Multi-tenant + Roles
+
+- [x] 3.1 Agregar role (owner/manager) al modelo Admin
+- [x] 3.2 Middleware requireOwner
+- [x] 3.3 POST /api/commerce (owner-only) para crear nuevos comercios
+- [x] 3.4 GET /api/commerce/list (owner-only) para listar comercios
+- [x] 3.5 DELETE /api/commerce/:id (owner-only)
+- [x] 3.6 POST /api/auth/impersonate (owner-only) para ver como manager
+- [x] 3.7 Cambiar ruta /admin → /gestion
+- [x] 3.8 Página AdminComercios con listado + alta + impersonar + eliminar
+- [x] 3.9 Dashboard global para owner
+- [x] 3.10 Sidebar adaptativo (owner ve Comercios, manager ve Agenda/Servicios/Config)
+
 ## FASE 2 — Integración WhatsApp + Devoluciones
 
-- [ ] 1.1 Endpoint GET /api/webhooks/whatsapp para verificación de Meta
-- [ ] 1.2 Endpoint POST /api/webhooks/whatsapp para recibir mensajes
-- [ ] 1.3 Middleware para identificar commerce por phone_number_id
+- [x] 1.1 Endpoint GET /api/webhooks/whatsapp para verificación de Meta
+- [x] 1.2 Endpoint POST /api/webhooks/whatsapp para recibir mensajes
+- [x] 1.3 Middleware para identificar commerce por phone_number_id
 - [x] 2.1 Lógica de mensaje inicial con botones
 - [x] 2.2 Lista de servicios por WhatsApp
 - [x] 2.3 Slots disponibles por WhatsApp

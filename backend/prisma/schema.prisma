@@ -67,14 +67,15 @@ model Appointment {
 
 model Admin {
   id           Int      @id @default(autoincrement())
-  commerceId   Int      @map("commerce_id")
+  commerceId   Int?     @map("commerce_id")
   email        String   @unique
   passwordHash String   @map("password_hash")
   nombre       String?
+  role         String   @default("manager")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  commerce Commerce @relation(fields: [commerceId], references: [id], onDelete: Cascade)
+  commerce Commerce? @relation(fields: [commerceId], references: [id], onDelete: Cascade)
 
   @@map("admins")
 }

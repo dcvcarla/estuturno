@@ -14,7 +14,7 @@ function serializeService(s: any) {
 
 router.get("/", authenticate, async (req: Request, res: Response) => {
   const services = await prisma.service.findMany({
-    where: { commerceId: req.admin!.commerceId },
+    where: { commerceId: req.admin!.commerceId! },
     orderBy: { nombre: "asc" },
   });
   res.json(services.map(serializeService));
@@ -25,7 +25,7 @@ router.post("/", authenticate, validate(serviceCreateSchema), async (req: Reques
 
   const service = await prisma.service.create({
     data: {
-      commerceId: req.admin!.commerceId,
+      commerceId: req.admin!.commerceId!,
       nombre,
       duracionMinutos,
       precio,
@@ -42,7 +42,7 @@ router.put("/:id", authenticate, validate(serviceUpdateSchema), async (req: Requ
   const id = Number(req.params.id);
 
   const service = await prisma.service.updateMany({
-    where: { id, commerceId: req.admin!.commerceId },
+    where: { id, commerceId: req.admin!.commerceId! },
     data: {
       ...(nombre !== undefined && { nombre }),
       ...(duracionMinutos !== undefined && { duracionMinutos }),
@@ -63,7 +63,7 @@ router.delete("/:id", authenticate, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
 
   await prisma.service.updateMany({
-    where: { id, commerceId: req.admin!.commerceId },
+    where: { id, commerceId: req.admin!.commerceId! },
     data: { activo: false },
   });
 

@@ -7,6 +7,7 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { AdminAgenda } from "./pages/AdminAgenda";
 import { AdminServices } from "./pages/AdminServices";
 import { AdminSettings } from "./pages/AdminSettings";
+import { AdminComercios } from "./pages/AdminComercios";
 import { Landing } from "./pages/Landing";
 
 function App() {
@@ -15,9 +16,9 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/gestion/login" element={<AdminLogin />} />
           <Route
-            path="/admin"
+            path="/gestion"
             element={
               <ProtectedRoute>
                 <AdminLayout />
@@ -28,6 +29,7 @@ function App() {
             <Route path="agenda" element={<AdminAgenda />} />
             <Route path="servicios" element={<AdminServices />} />
             <Route path="configuracion" element={<AdminSettings />} />
+            <Route path="comercios" element={<AdminComercios />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

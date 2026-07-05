@@ -21,6 +21,8 @@ export const loginSchema = z.object({
 export const commerceUpdateSchema = z.object({
   nombre: z.string().min(1).optional(),
   telefonoWhatsapp: z.string().optional(),
+  phoneNumberId: z.string().optional(),
+  whatsappToken: z.string().optional(),
   mpAccessToken: z.string().optional(),
   configuracionHorarios: z.any().optional(),
 });

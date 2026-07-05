@@ -5,7 +5,8 @@ interface Admin {
   id: number;
   email: string;
   nombre: string | null;
-  commerceId: number;
+  commerceId: number | null;
+  role: string;
 }
 
 interface AuthContextType {

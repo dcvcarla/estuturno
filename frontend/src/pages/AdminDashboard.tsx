@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 interface Appointment {
   id: number;
@@ -9,7 +10,21 @@ interface Appointment {
   fechaHoraInicio: string;
 }
 
+interface CommerceSummary {
+  id: number;
+  nombre: string;
+  _count: { appointments: number; services: number };
+}
+
 export function AdminDashboard() {
+  const { admin } = useAuth();
+  const isOwner = admin?.role === "owner";
+
+  if (isOwner) return <OwnerDashboard />;
+  return <ManagerDashboard />;
+}
+
+function ManagerDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +53,6 @@ export function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-600">Pendientes de pago</p>
@@ -53,7 +67,6 @@ export function AdminDashboard() {
           <p className="text-3xl font-bold text-red-800">{counts.cancelado}</p>
         </div>
       </div>
-
       <h2 className="text-lg font-semibold mb-3">Turnos de hoy</h2>
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -68,9 +81,7 @@ export function AdminDashboard() {
           <tbody className="divide-y divide-gray-200">
             {appointments.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                  No hay turnos para hoy
-                </td>
+                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">No hay turnos para hoy</td>
               </tr>
             )}
             {appointments.map((apt) => (
@@ -90,6 +101,70 @@ export function AdminDashboard() {
                      apt.estado === "confirmado" ? "Confirmado" : "Cancelado"}
                   </span>
                 </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function OwnerDashboard() {
+  const [commerces, setCommerces] = useState<CommerceSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api<CommerceSummary[]>("/api/commerce/list")
+      .then(setCommerces)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      </div>
+    );
+  }
+
+  const totalAppointments = commerces.reduce((sum, c) => sum + c._count.appointments, 0);
+  const totalServices = commerces.reduce((sum, c) => sum + c._count.services, 0);
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Dashboard Global</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <p className="text-sm text-indigo-600">Comercios activos</p>
+          <p className="text-3xl font-bold text-indigo-800">{commerces.length}</p>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-600">Servicios totales</p>
+          <p className="text-3xl font-bold text-blue-800">{totalServices}</p>
+        </div>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <p className="text-sm text-purple-600">Turnos totales</p>
+          <p className="text-3xl font-bold text-purple-800">{totalAppointments}</p>
+        </div>
+      </div>
+      <h2 className="text-lg font-semibold mb-3">Resumen por comercio</h2>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comercio</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicios</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turnos</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {commerces.map((c) => (
+              <tr key={c.id}>
+                <td className="px-4 py-3 text-sm font-medium">{c.nombre}</td>
+                <td className="px-4 py-3 text-sm">{c._count.services}</td>
+                <td className="px-4 py-3 text-sm">{c._count.appointments}</td>
               </tr>
             ))}
           </tbody>

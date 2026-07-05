@@ -14,7 +14,7 @@ export function AdminLogin() {
     setError("");
     try {
       await login(email, password);
-      navigate("/admin");
+      navigate("/gestion");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     }
