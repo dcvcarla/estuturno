@@ -11,6 +11,7 @@ import commerceRoutes from "./routes/commerce";
 import serviceRoutes from "./routes/services";
 import appointmentRoutes from "./routes/appointments";
 import paymentRoutes from "./routes/payments";
+import whatsappRoutes from "./routes/whatsapp";
 import { cancelExpiredAppointments } from "./services/cron";
 import { processPendingWebhooks } from "./services/webhookRetry";
 
@@ -26,6 +27,8 @@ async function autoSeed() {
       nombre: "Mi Comercio",
       dominio: "estuturno-backend.onrender.com",
       telefonoWhatsapp: "+5491123456789",
+      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || null,
+      whatsappToken: process.env.WHATSAPP_TOKEN || null,
       configuracionHorarios: JSON.stringify({
         lunes: [{ inicio: "09:00", fin: "18:00" }],
         martes: [{ inicio: "09:00", fin: "18:00" }],
@@ -75,6 +78,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api", paymentRoutes);
+app.use("/api", whatsappRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -12,6 +12,8 @@ model Commerce {
   nombre              String
   dominio             String   @unique
   telefonoWhatsapp    String?
+  phoneNumberId       String?  @map("phone_number_id")
+  whatsappToken       String?  @map("whatsapp_token")
   mpAccessToken       String?
   configuracionHorarios String? @map("configuracion_horarios") @db.Text
   createdAt           DateTime @default(now()) @map("created_at")
