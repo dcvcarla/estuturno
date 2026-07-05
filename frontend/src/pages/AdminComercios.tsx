@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api, setTokens } from "../api/client";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 interface Commerce {
@@ -15,7 +14,6 @@ interface Commerce {
 
 export function AdminComercios() {
   const { admin } = useAuth();
-  const navigate = useNavigate();
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
