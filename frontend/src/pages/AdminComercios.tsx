@@ -19,7 +19,7 @@ interface CommerceAdmin {
 }
 
 export function AdminComercios() {
-  const { admin, refreshAdmin } = useAuth();
+  const { admin } = useAuth();
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
