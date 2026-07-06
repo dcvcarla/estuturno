@@ -133,7 +133,7 @@ router.get("/:id/admins", authenticate, requireOwner, async (req: Request, res: 
 
 router.put("/:id", authenticate, requireOwner, async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const { nombre, dominio, telefonoWhatsapp } = req.body;
+  const { nombre, dominio, telefonoWhatsapp, phoneNumberId, whatsappToken } = req.body;
 
   if (dominio) {
     const existing = await prisma.commerce.findFirst({ where: { dominio, NOT: { id } } });
@@ -146,6 +146,8 @@ router.put("/:id", authenticate, requireOwner, async (req: Request, res: Respons
       ...(nombre !== undefined && { nombre }),
       ...(dominio !== undefined && { dominio }),
       ...(telefonoWhatsapp !== undefined && { telefonoWhatsapp: telefonoWhatsapp || null }),
+      ...(phoneNumberId !== undefined && { phoneNumberId }),
+      ...(whatsappToken !== undefined && { whatsappToken }),
     },
   });
 
