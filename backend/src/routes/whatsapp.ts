@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { authenticate } from "../middleware/auth";
 import {
   sendWhatsAppMessage,
   buildGreetingButtons,
@@ -40,7 +41,18 @@ async function getOrCreateSession(commerceId: number, clientPhone: string) {
   });
 }
 
-router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
+router.post("/test-wa-send", authenticate, async (req: Request, res: Response) => {
+  if (!req.admin?.commerceId) return res.status(400).json({ error: "No commerce" });
+  const commerce = await prisma.commerce.findUnique({ where: { id: req.admin.commerceId } });
+  if (!commerce?.phoneNumberId || !commerce?.whatsappToken) return res.status(400).json({ error: "WA not configured" });
+  try {
+    const result = await sendWhatsAppMessage(commerce.phoneNumberId, commerce.whatsappToken, "542257666951", buildTextMessage("Test desde el backend ✅"));
+    const body = result.ok ? await result.text() : `ERROR ${result.status}`;
+    res.json({ ok: result.ok, body });
+  } catch (err: any) {
+    res.json({ ok: false, error: err.message });
+  }
+});
   try {
     const body = req.body;
     if (body.object !== "whatsapp_business_account") return res.sendStatus(404);
