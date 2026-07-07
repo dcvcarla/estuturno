@@ -55,40 +55,46 @@ router.post("/test-wa-send", authenticate, async (req: Request, res: Response) =
 });
 
 router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
+  const debug: any = { step: "start" };
   try {
     const body = req.body;
-    if (body.object !== "whatsapp_business_account") return res.sendStatus(404);
+    debug.object = body.object;
+    if (body.object !== "whatsapp_business_account") return res.json(debug);
 
     const entry = body.entry?.[0];
     const change = entry?.changes?.[0];
     const value = change?.value;
     const phoneNumberId = value?.metadata?.phone_number_id;
+    debug.phoneNumberId = phoneNumberId;
 
-    if (!phoneNumberId) return res.sendStatus(200);
+    if (!phoneNumberId) return res.json(debug);
 
-    console.log(`[WA WEBHOOK] phoneNumberId=${phoneNumberId}`);
-
+    debug.step = "lookup_commerce";
     const commerce = await prisma.commerce.findFirst({
       where: { phoneNumberId },
       select: { id: true, nombre: true, whatsappToken: true, telefonoWhatsapp: true },
     });
+    debug.commerceFound = !!commerce;
+    debug.tokenPresent = !!commerce?.whatsappToken;
 
-    if (!commerce || !commerce.whatsappToken) {
-      console.log(`[WA WEBHOOK] commerce not found or no token for ${phoneNumberId}`);
-      return res.sendStatus(200);
-    }
+    if (!commerce || !commerce.whatsappToken) return res.json(debug);
 
-    console.log(`[WA WEBHOOK] commerce=${commerce.nombre} id=${commerce.id}`);
+    debug.commerceName = commerce.nombre;
 
     const messages = value?.messages;
-    if (!messages || messages.length === 0) return res.sendStatus(200);
+    debug.msgCount = messages?.length;
+    if (!messages || messages.length === 0) return res.json(debug);
 
     for (const msg of messages) {
       const from = msg.from;
       const msgType = msg.type;
+      debug.msgType = msgType;
+      debug.from = from;
 
       const session = await getOrCreateSession(commerce.id, from);
-      if (!session.botActive) continue;
+      debug.botActive = session.botActive;
+      debug.sessionEstado = session.estado;
+      if (!session.botActive) { debug.skipped = "botInactive"; continue; }
 
       if (msgType === "text") {
         const text = (msg.text?.body || "").trim();
@@ -98,7 +104,10 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             where: { id: session.id },
             data: { estado: "menu", serviceId: null, fecha: null, hora: null },
           });
-          await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildGreetingButtons());
+          debug.greetingMatch = true;
+          const sendResult = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildGreetingButtons());
+          debug.sendOk = sendResult.ok;
+          if (!sendResult.ok) { const t = await sendResult.text(); debug.sendError = t; }
           continue;
         }
 
@@ -353,10 +362,10 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
       }
     }
 
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("WhatsApp webhook error:", err);
-    res.sendStatus(200);
+    res.json(debug);
+  } catch (err: any) {
+    debug.error = err.message;
+    res.json(debug);
   }
 });
 
