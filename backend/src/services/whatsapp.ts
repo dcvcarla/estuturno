@@ -14,18 +14,22 @@ export async function sendWhatsAppMessage(
   payload: Record<string, any>
 ) {
   const normalizedTo = normalizeNumber(to);
+  const body = JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: normalizedTo, ...payload });
+  console.log(`[WA SEND] to=${normalizedTo} type=${payload.type || "text"}`);
   const res = await fetch(`${API_BASE}/${phoneNumberId}/messages`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: normalizedTo, ...payload }),
+    body,
   });
 
   if (!res.ok) {
     const text = await res.text();
-    console.error(`WhatsApp API error (${res.status}):`, text);
+    console.error(`[WA ERROR] ${res.status}: ${text}`);
+  } else {
+    console.log(`[WA OK] sent to ${normalizedTo}`);
   }
 
   return res;

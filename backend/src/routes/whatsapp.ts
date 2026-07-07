@@ -52,12 +52,19 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
 
     if (!phoneNumberId) return res.sendStatus(200);
 
+    console.log(`[WA WEBHOOK] phoneNumberId=${phoneNumberId}`);
+
     const commerce = await prisma.commerce.findFirst({
       where: { phoneNumberId },
       select: { id: true, nombre: true, whatsappToken: true, telefonoWhatsapp: true },
     });
 
-    if (!commerce || !commerce.whatsappToken) return res.sendStatus(200);
+    if (!commerce || !commerce.whatsappToken) {
+      console.log(`[WA WEBHOOK] commerce not found or no token for ${phoneNumberId}`);
+      return res.sendStatus(200);
+    }
+
+    console.log(`[WA WEBHOOK] commerce=${commerce.nombre} id=${commerce.id}`);
 
     const messages = value?.messages;
     if (!messages || messages.length === 0) return res.sendStatus(200);
