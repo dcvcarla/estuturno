@@ -53,6 +53,8 @@ router.post("/test-wa-send", authenticate, async (req: Request, res: Response) =
     res.json({ ok: false, error: err.message });
   }
 });
+
+router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
   try {
     const body = req.body;
     if (body.object !== "whatsapp_business_account") return res.sendStatus(404);
