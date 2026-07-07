@@ -1,4 +1,11 @@
-const API_BASE = "https://graph.facebook.com/v21.0";
+const API_BASE = "https://graph.facebook.com/v25.0";
+
+function normalizeNumber(phone: string): string {
+  if (phone.startsWith("549") && phone.length > 3 && phone[3] !== "9") {
+    return "54" + phone.slice(3);
+  }
+  return phone;
+}
 
 export async function sendWhatsAppMessage(
   phoneNumberId: string,
@@ -6,13 +13,14 @@ export async function sendWhatsAppMessage(
   to: string,
   payload: Record<string, any>
 ) {
+  const normalizedTo = normalizeNumber(to);
   const res = await fetch(`${API_BASE}/${phoneNumberId}/messages`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to, ...payload }),
+    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: normalizedTo, ...payload }),
   });
 
   if (!res.ok) {
