@@ -91,16 +91,38 @@ export function buildDateButtons(dates: string[]) {
 }
 
 export function buildSlotButtons(slots: string[]) {
+  if (slots.length <= 3) {
+    return {
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "Elegí un horario:" },
+        action: {
+          buttons: slots.slice(0, 3).map((s) => ({
+            type: "reply",
+            reply: { id: `hora_${s}`, title: s },
+          })),
+        },
+      },
+    };
+  }
   return {
     type: "interactive",
     interactive: {
-      type: "button",
+      type: "list",
+      header: { type: "text", text: "Horarios disponibles" },
       body: { text: "Elegí un horario:" },
       action: {
-        buttons: slots.slice(0, 10).map((s) => ({
-          type: "reply",
-          reply: { id: `hora_${s}`, title: s },
-        })),
+        button: "Ver horarios",
+        sections: [
+          {
+            title: "Disponibles",
+            rows: slots.slice(0, 10).map((s) => ({
+              id: `hora_${s}`,
+              title: s,
+            })),
+          },
+        ],
       },
     },
   };
