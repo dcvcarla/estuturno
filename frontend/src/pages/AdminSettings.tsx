@@ -30,7 +30,7 @@ export function AdminSettings() {
   useEffect(() => {
     api<Commerce & { configuracionHorarios: string; botConfig: string }>("/api/commerce")
       .then((data) => {
-        setCommerce(data);
+        setCommerce({ ...data, logoUrl: data.logoUrl || "", colorPrimario: data.colorPrimario || "#4f46e5", colorSecundario: data.colorSecundario || "#6366f1", colorAcento: data.colorAcento || "#818cf8" });
         if (data.configuracionHorarios) {
           try { setHorarios(JSON.parse(data.configuracionHorarios)); } catch {}
         }
@@ -139,7 +139,7 @@ export function AdminSettings() {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6 max-w-xl">
+      <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h2 className="text-lg font-semibold">Datos del comercio</h2>
           <div>

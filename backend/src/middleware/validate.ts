@@ -26,10 +26,10 @@ export const commerceUpdateSchema = z.object({
   mpAccessToken: z.string().nullable().optional(),
   configuracionHorarios: z.any().optional(),
   botConfig: z.any().optional(),
-  logoUrl: z.string().optional(),
-  colorPrimario: z.string().optional(),
-  colorSecundario: z.string().optional(),
-  colorAcento: z.string().optional(),
+  logoUrl: z.string().nullish(),
+  colorPrimario: z.string().nullish(),
+  colorSecundario: z.string().nullish(),
+  colorAcento: z.string().nullish(),
 });
 
 export const serviceCreateSchema = z.object({
