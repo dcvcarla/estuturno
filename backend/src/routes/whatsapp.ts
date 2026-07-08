@@ -171,21 +171,32 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             io.to(`commerce:${commerce.id}`).emit("appointment:created", appointment);
 
             if (service.montoSena && Number(service.montoSena) > 0) {
-              const baseUrl = process.env.BASE_URL || `https://${process.env.RENDER_EXTERNAL_URL || "estuturno-backend.onrender.com"}`;
-              const preference = await createPaymentPreference(
-                [{ title: `Seña - ${service.nombre}`, unit_price: Number(service.montoSena), quantity: 1 }],
-                String(appointment.id),
-                `${baseUrl}/api/webhooks/mercadopago`
-              );
+              try {
+                const baseUrl = process.env.BASE_URL || `https://${process.env.RENDER_EXTERNAL_URL || "estuturno-backend.onrender.com"}`;
+                const preference = await createPaymentPreference(
+                  [{ title: `Seña - ${service.nombre}`, unit_price: Number(service.montoSena), quantity: 1 }],
+                  String(appointment.id),
+                  `${baseUrl}/api/webhooks/mercadopago`
+                );
 
-              await prisma.appointment.update({
-                where: { id: appointment.id },
-                data: { mpPreferenceId: preference.id },
-              });
+                await prisma.appointment.update({
+                  where: { id: appointment.id },
+                  data: { mpPreferenceId: preference.id },
+                });
 
-              await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(
-                `✅ Turno reservado, ${text}!\n\n📅 ${fecha} a las ${hora}\n💇 ${service.nombre}\n\nPara confirmar, aboná la seña de $${Number(service.montoSena).toLocaleString("es-AR")}:\n${preference.initPoint}`
-              ));
+                await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(
+                  `✅ Turno reservado, ${text}!\n\n📅 ${fecha} a las ${hora}\n💇 ${service.nombre}\n\nPara confirmar, aboná la seña de $${Number(service.montoSena).toLocaleString("es-AR")}:\n${preference.initPoint}`
+                ));
+              } catch {
+                await prisma.appointment.update({
+                  where: { id: appointment.id },
+                  data: { estado: "confirmado" },
+                });
+                io.to(`commerce:${commerce.id}`).emit("appointment:confirmed", appointment);
+                await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(
+                  `✅ Turno confirmado, ${text}!\n\n📅 ${fecha} a las ${hora}\n💇 ${service.nombre}\n\nTe esperamos!`
+                ));
+              }
             } else {
               await prisma.appointment.update({
                 where: { id: appointment.id },
