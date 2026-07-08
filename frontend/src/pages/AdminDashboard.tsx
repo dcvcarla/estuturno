@@ -26,13 +26,17 @@ export function AdminDashboard() {
 
 function ManagerDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [commerce, setCommerce] = useState<{ nombre: string; dominio: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     const future = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    api<Appointment[]>(`/api/appointments?from=${today}&to=${future}`)
-      .then(setAppointments)
+    Promise.all([
+      api<Appointment[]>(`/api/appointments?from=${today}&to=${future}`),
+      api<{ nombre: string; dominio: string }>("/api/commerce").then(setCommerce).catch(() => {}),
+    ])
+      .then(([apts]) => setAppointments(apts))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -42,6 +46,8 @@ function ManagerDashboard() {
     confirmado: appointments.filter((a) => a.estado === "confirmado").length,
     cancelado: appointments.filter((a) => a.estado === "cancelado").length,
   };
+
+  const frontendUrl = window.location.origin;
 
   if (loading) {
     return (
@@ -54,6 +60,16 @@ function ManagerDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+
+      <div className="flex gap-4 mb-6">
+        <a href={frontendUrl} target="_blank" rel="noopener noreferrer" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700">
+          Ver página de turnos
+        </a>
+        <a href={`${frontendUrl}/gestion/agenda`} className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
+          Ir a agenda
+        </a>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-600">Pendientes de pago</p>
