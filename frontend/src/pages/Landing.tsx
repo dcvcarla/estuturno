@@ -36,9 +36,23 @@ export function Landing() {
   const c1 = commerce?.colorPrimario || "#4f46e5";
   const c2 = commerce?.colorSecundario || "#6366f1";
 
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  function addLog(msg: string) { setDebugLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]); }
+
   useEffect(() => {
-    api<Commerce>("/api/commerce/public").then(setCommerce).catch(() => {});
-    api<Service[]>("/api/services/public").then(setServices).catch(() => {});
+    addLog("⏳ Cargando comercio...");
+    api<Commerce>("/api/commerce/public").then((data) => {
+      addLog("✅ Comercio OK: " + JSON.stringify(data));
+      setCommerce(data);
+    }).catch((err) => {
+      addLog("❌ Error comercio: " + (err.message || err));
+    });
+    api<Service[]>("/api/services/public").then((data) => {
+      addLog("✅ Servicios OK: " + data.length + " servicios");
+      setServices(data);
+    }).catch((err) => {
+      addLog("❌ Error servicios: " + (err.message || err));
+    });
   }, []);
 
   async function selectService(s: Service) {
@@ -87,6 +101,10 @@ export function Landing() {
 
   return (
     <div style={{ background: `linear-gradient(135deg, ${c1}22, ${c2}22)` }} className="min-h-screen">
+      <div className="bg-black/80 text-green-300 text-xs p-4 font-mono whitespace-pre-wrap max-h-96 overflow-auto">
+        {debugLog.map((l, i) => <div key={i}>{l}</div>)}
+        <div>c1={c1} | c2={c2} | commerce={commerce ? "cargado" : "null"} | services={services.length}</div>
+      </div>
       {commerce?.telefonoWhatsapp && (
         <a
           href={`https://wa.me/${commerce.telefonoWhatsapp.replace(/[^0-9]/g, "")}`}
