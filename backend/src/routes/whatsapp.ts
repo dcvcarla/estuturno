@@ -121,6 +121,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
         }
 
         if (session.estado === "awaiting_name") {
+          debug.awaitingName = true;
           await prisma.chatSession.update({
             where: { id: session.id },
             data: { estado: "confirming" },
@@ -129,6 +130,9 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           const serviceId = session.serviceId!;
           const fecha = session.fecha!;
           const hora = session.hora!;
+          debug.serviceId = serviceId;
+          debug.fecha = fecha;
+          debug.hora = hora;
           const [h, m] = hora.split(":").map(Number);
           const start = new Date(fecha);
           start.setHours(h, m, 0, 0);
@@ -171,6 +175,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             io.to(`commerce:${commerce.id}`).emit("appointment:created", appointment);
 
             if (service.montoSena && Number(service.montoSena) > 0) {
+              debug.hasMontoSena = true;
               try {
                 const baseUrl = process.env.BASE_URL || `https://${process.env.RENDER_EXTERNAL_URL || "estuturno-backend.onrender.com"}`;
                 const preference = await createPaymentPreference(
@@ -187,7 +192,8 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
                 await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(
                   `✅ Turno reservado, ${text}!\n\n📅 ${fecha} a las ${hora}\n💇 ${service.nombre}\n\nPara confirmar, aboná la seña de $${Number(service.montoSena).toLocaleString("es-AR")}:\n${preference.initPoint}`
                 ));
-              } catch {
+              } catch (mpErr: any) {
+                debug.mpPaymentFailed = mpErr.message;
                 await prisma.appointment.update({
                   where: { id: appointment.id },
                   data: { estado: "confirmado" },
@@ -198,6 +204,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
                 ));
               }
             } else {
+              debug.hasMontoSena = false;
               await prisma.appointment.update({
                 where: { id: appointment.id },
                 data: { estado: "confirmado" },
@@ -214,6 +221,8 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
               data: { estado: "menu", serviceId: null, fecha: null, hora: null },
             });
           } catch (err: any) {
+            debug.bookingError = err.message;
+            debug.bookingErrorCode = err.code;
             if (err.message === "DOUBLE_BOOKING") {
               await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("Ese horario ya fue reservado. Volvé a empezar con *Menu*."));
             } else {
