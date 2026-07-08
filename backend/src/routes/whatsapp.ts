@@ -15,6 +15,13 @@ import { io } from "../index";
 
 const router = Router();
 
+const MAX_LOGS = 50;
+const debugLogs: any[] = [];
+
+router.get("/webhooks/debug-logs", (_req: Request, res: Response) => {
+  res.json(debugLogs);
+});
+
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "estuturno_verify_2026";
 
 router.get("/webhooks/whatsapp", (req: Request, res: Response) => {
@@ -265,6 +272,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             where: { id: session.id },
             data: { estado: "selecting_service" },
           });
+          continue;
 
         } else if (replyId === "cancelar") {
           const appointments = await prisma.appointment.findMany({
@@ -365,10 +373,14 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
       }
     }
 
+    debugLogs.push({ timestamp: new Date().toISOString(), ...debug });
+    if (debugLogs.length > MAX_LOGS) debugLogs.shift();
     res.json(debug);
   } catch (err: any) {
     debug.error = err.message;
     debug.errorStack = err.stack?.substring(0, 200);
+    debugLogs.push({ timestamp: new Date().toISOString(), ...debug });
+    if (debugLogs.length > MAX_LOGS) debugLogs.shift();
     res.json(debug);
   }
 });
