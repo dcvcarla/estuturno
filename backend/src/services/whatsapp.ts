@@ -15,7 +15,6 @@ export async function sendWhatsAppMessage(
 ) {
   const normalizedTo = normalizeNumber(to);
   const body = JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: normalizedTo, ...payload });
-  console.log(`[WA SEND] to=${normalizedTo} type=${payload.type || "text"}`);
   const res = await fetch(`${API_BASE}/${phoneNumberId}/messages`, {
     method: "POST",
     headers: {
@@ -28,11 +27,9 @@ export async function sendWhatsAppMessage(
   if (!res.ok) {
     const text = await res.text();
     console.error(`[WA ERROR] ${res.status}: ${text}`);
-  } else {
-    console.log(`[WA OK] sent to ${normalizedTo}`);
   }
 
-  return res;
+  return { ok: res.ok, status: res.status, data: res.ok ? undefined : "see logs" };
 }
 
 export function buildGreetingButtons() {

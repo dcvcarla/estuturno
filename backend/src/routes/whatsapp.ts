@@ -45,13 +45,8 @@ router.post("/test-wa-send", authenticate, async (req: Request, res: Response) =
   if (!req.admin?.commerceId) return res.status(400).json({ error: "No commerce" });
   const commerce = await prisma.commerce.findUnique({ where: { id: req.admin.commerceId } });
   if (!commerce?.phoneNumberId || !commerce?.whatsappToken) return res.status(400).json({ error: "WA not configured" });
-  try {
-    const result = await sendWhatsAppMessage(commerce.phoneNumberId, commerce.whatsappToken, "542257666951", buildTextMessage("Test desde el backend ✅"));
-    const body = result.ok ? await result.text() : `ERROR ${result.status}`;
-    res.json({ ok: result.ok, body });
-  } catch (err: any) {
-    res.json({ ok: false, error: err.message });
-  }
+  const result = await sendWhatsAppMessage(commerce.phoneNumberId, commerce.whatsappToken, "542257666951", buildTextMessage("Test desde el backend ✅"));
+  res.json(result);
 });
 
 router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
@@ -107,7 +102,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           debug.greetingMatch = true;
           const sendResult = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildGreetingButtons());
           debug.sendOk = sendResult.ok;
-          if (!sendResult.ok) { const t = await sendResult.text(); debug.sendError = t; }
+          debug.sendStatus = sendResult.status;
           continue;
         }
 
