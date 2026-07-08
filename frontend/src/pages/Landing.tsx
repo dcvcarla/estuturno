@@ -35,7 +35,6 @@ export function Landing() {
 
   const c1 = commerce?.colorPrimario || "#4f46e5";
   const c2 = commerce?.colorSecundario || "#6366f1";
-  const c3 = commerce?.colorAcento || "#818cf8";
 
   useEffect(() => {
     api<Commerce>("/api/commerce/public").then(setCommerce).catch(() => {});
@@ -85,7 +84,6 @@ export function Landing() {
   }
 
   const btnStyle = { backgroundColor: c1, borderColor: c1 };
-  const btnHover = `hover:brightness-110`;
 
   return (
     <div style={{ background: `linear-gradient(135deg, ${c1}22, ${c2}22)` }} className="min-h-screen">
