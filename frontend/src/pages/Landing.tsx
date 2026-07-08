@@ -197,6 +197,7 @@ export function Landing() {
           )}
         </div>
       </div>
+      {commerce && <pre className="text-xs text-gray-400 mt-8 text-center whitespace-pre-wrap">{JSON.stringify(commerce, null, 2)}</pre>}
     </div>
   );
 }
