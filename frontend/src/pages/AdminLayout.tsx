@@ -21,13 +21,17 @@ export function AdminLayout() {
   const isOwner = admin?.role === "owner";
   const isImpersonating = admin?.impersonating;
   const links = isOwner ? ownerLinks : managerLinks;
-  const [commerceName, setCommerceName] = useState("");
+  const [commerceData, setCommerceData] = useState<{ nombre: string; colorPrimario: string | null; colorSecundario: string | null; colorAcento: string | null } | null>(null);
 
   useEffect(() => {
     if (!isOwner && admin?.commerceId) {
-      api<{ nombre: string }>("/api/commerce").then((d) => setCommerceName(d.nombre)).catch(() => {});
+      api<{ nombre: string; colorPrimario: string | null; colorSecundario: string | null; colorAcento: string | null }>("/api/commerce")
+        .then(setCommerceData).catch(() => {});
     }
   }, [admin?.commerceId, isOwner]);
+
+  const pc = !isOwner && commerceData?.colorPrimario ? commerceData.colorPrimario : "#4338ca";
+  const sc = !isOwner && commerceData?.colorSecundario ? commerceData.colorSecundario : "#6366f1";
 
   async function handleUnimpersonate() {
     try {
@@ -47,10 +51,10 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      <aside className="w-64 bg-indigo-900 text-white flex flex-col">
-        <div className="p-4 border-b border-indigo-800">
-          <h1 className="text-xl font-bold">{commerceName || "EsTuTurno"}</h1>
-          <p className="text-sm text-indigo-300 mt-1">{admin?.nombre || admin?.email}</p>
+      <aside className="w-64 text-white flex flex-col" style={{ backgroundColor: pc }}>
+        <div className="p-4 border-b" style={{ borderColor: `${sc}88` }}>
+          <h1 className="text-xl font-bold">{commerceData?.nombre || "EsTuTurno"}</h1>
+          <p className="text-sm mt-1 opacity-80">{admin?.nombre || admin?.email}</p>
           {isOwner && <span className="text-xs text-yellow-300 mt-1 block">Owner</span>}
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -59,17 +63,18 @@ export function AdminLayout() {
               key={link.to}
               to={link.to}
               end={link.end}
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded transition ${
-                  isActive ? "bg-indigo-700 text-white" : "text-indigo-200 hover:bg-indigo-800"
-                }`
-              }
+              className="block px-3 py-2 rounded transition"
+              style={({ isActive }) => ({
+                backgroundColor: isActive ? sc : "transparent",
+                color: "white",
+                opacity: isActive ? 1 : 0.8,
+              })}
             >
               {link.label}
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-indigo-800 space-y-2">
+        <div className="p-4 border-t space-y-2" style={{ borderColor: `${sc}88` }}>
           {isImpersonating && (
             <button
               onClick={handleUnimpersonate}
@@ -80,7 +85,8 @@ export function AdminLayout() {
           )}
           <button
             onClick={handleLogout}
-            className="w-full text-left text-indigo-300 hover:text-white transition"
+            className="w-full text-left transition text-sm"
+            style={{ color: "white", opacity: 0.8 }}
           >
             Cerrar sesión
           </button>
