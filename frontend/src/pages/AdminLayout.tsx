@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api, setTokens } from "../api/client";
+import { useEffect, useState } from "react";
 
 const managerLinks = [
   { to: "/gestion", label: "Dashboard", end: true },
@@ -20,6 +21,13 @@ export function AdminLayout() {
   const isOwner = admin?.role === "owner";
   const isImpersonating = admin?.impersonating;
   const links = isOwner ? ownerLinks : managerLinks;
+  const [commerceName, setCommerceName] = useState("");
+
+  useEffect(() => {
+    if (!isOwner && admin?.commerceId) {
+      api<{ nombre: string }>("/api/commerce").then((d) => setCommerceName(d.nombre)).catch(() => {});
+    }
+  }, [admin?.commerceId, isOwner]);
 
   async function handleUnimpersonate() {
     try {
@@ -41,7 +49,7 @@ export function AdminLayout() {
     <div className="min-h-screen flex bg-gray-50">
       <aside className="w-64 bg-indigo-900 text-white flex flex-col">
         <div className="p-4 border-b border-indigo-800">
-          <h1 className="text-xl font-bold">EsTuTurno</h1>
+          <h1 className="text-xl font-bold">{commerceName || "EsTuTurno"}</h1>
           <p className="text-sm text-indigo-300 mt-1">{admin?.nombre || admin?.email}</p>
           {isOwner && <span className="text-xs text-yellow-300 mt-1 block">Owner</span>}
         </div>

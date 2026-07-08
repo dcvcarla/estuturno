@@ -5,6 +5,10 @@ interface Commerce {
   nombre: string;
   telefonoWhatsapp: string;
   mpAccessToken: string;
+  logoUrl: string;
+  colorPrimario: string;
+  colorSecundario: string;
+  colorAcento: string;
 }
 
 interface FaqItem {
@@ -15,7 +19,7 @@ interface FaqItem {
 const DAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
 
 export function AdminSettings() {
-  const [commerce, setCommerce] = useState<Commerce>({ nombre: "", telefonoWhatsapp: "", mpAccessToken: "" });
+  const [commerce, setCommerce] = useState<Commerce>({ nombre: "", telefonoWhatsapp: "", mpAccessToken: "", logoUrl: "", colorPrimario: "#4f46e5", colorSecundario: "#6366f1", colorAcento: "#818cf8" });
   const [horarios, setHorarios] = useState<Record<string, { inicio: string; fin: string }[]>>({});
   const [greeting, setGreeting] = useState("");
   const [faq, setFaq] = useState<FaqItem[]>([]);
@@ -149,6 +153,31 @@ export function AdminSettings() {
           <div>
             <label className="block text-sm font-medium">Mercado Pago Access Token</label>
             <input value={commerce.mpAccessToken} onChange={(e) => setCommerce({ ...commerce, mpAccessToken: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" type="password" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Personalización visual</h2>
+          <div>
+            <label className="block text-sm font-medium">Logo (URL)</label>
+            <input value={commerce.logoUrl} onChange={(e) => setCommerce({ ...commerce, logoUrl: e.target.value })} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" placeholder="https://ejemplo.com/logo.png" />
+            {commerce.logoUrl && (
+              <img src={commerce.logoUrl} alt="logo" className="mt-2 h-12 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium">Color primario</label>
+              <input type="color" value={commerce.colorPrimario} onChange={(e) => setCommerce({ ...commerce, colorPrimario: e.target.value })} className="mt-1 block w-full h-10 rounded-md border border-gray-300 cursor-pointer" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Color secundario</label>
+              <input type="color" value={commerce.colorSecundario} onChange={(e) => setCommerce({ ...commerce, colorSecundario: e.target.value })} className="mt-1 block w-full h-10 rounded-md border border-gray-300 cursor-pointer" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Color de acento</label>
+              <input type="color" value={commerce.colorAcento} onChange={(e) => setCommerce({ ...commerce, colorAcento: e.target.value })} className="mt-1 block w-full h-10 rounded-md border border-gray-300 cursor-pointer" />
+            </div>
           </div>
         </div>
 

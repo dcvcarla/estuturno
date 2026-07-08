@@ -17,6 +17,10 @@ model Commerce {
   mpAccessToken       String?
   configuracionHorarios String? @map("configuracion_horarios") @db.Text
   botConfig            String? @map("bot_config") @db.Text
+  logoUrl              String? @map("logo_url")
+  colorPrimario        String? @map("color_primario")
+  colorSecundario      String? @map("color_secundario")
+  colorAcento          String? @map("color_acento")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
