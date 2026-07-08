@@ -41,6 +41,7 @@ export function buildGreetingButtons(bodyText?: string) {
       action: {
         buttons: [
           { type: "reply", reply: { id: "reservar", title: "📅 Reservar Turno" } },
+          { type: "reply", reply: { id: "info", title: "ℹ️ Información" } },
           { type: "reply", reply: { id: "cancelar", title: "❌ Cancelar" } },
         ],
       },

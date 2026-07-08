@@ -141,6 +141,25 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           continue;
         }
 
+        if (["info", "informacion", "ayuda"].includes(lower)) {
+          const faqItems = faqMap ? Object.entries(faqMap) : [];
+          if (faqItems.length === 0 || faqItems.length > 10) {
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay información disponible. Escribí *Menu* para volver al inicio o *Humano* para hablar con un operador."));
+            debug.sendInfoOk = r.ok;
+          } else if (faqItems.length <= 3) {
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
+              type: "interactive", interactive: { type: "button", body: { text: "Seleccioná un tema:" }, action: { buttons: faqItems.map(([key]) => ({ type: "reply" as const, reply: { id: `faq_${key}`, title: key.length > 20 ? key.slice(0, 20) : key } })) } },
+            });
+            debug.sendInfoOk = r.ok;
+          } else {
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
+              type: "interactive", interactive: { type: "list", header: { type: "text", text: "Información" }, body: { text: "Seleccioná un tema:" }, action: { button: "Ver temas", sections: [{ title: "Disponibles", rows: faqItems.map(([key]) => ({ id: `faq_${key}`, title: key })) }] } },
+            });
+            debug.sendInfoOk = r.ok;
+          }
+          continue;
+        }
+
         if (session.estado === "awaiting_name") {
           debug.awaitingName = true;
           await prisma.chatSession.update({
@@ -269,7 +288,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
         }
 
         await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(
-          "No entendí tu mensaje. Respondé *Menu* para volver al inicio o *Humano* para hablar con un operador."
+          "No entendí tu mensaje. Respondé *Menu* para volver al inicio, *Info* para información útil, o *Humano* para hablar con un operador."
         ));
 
       } else if (msgType === "interactive") {
@@ -318,6 +337,51 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             where: { id: session.id },
             data: { estado: "selecting_service" },
           });
+          continue;
+
+        } else if (replyId === "info") {
+          const faqItems = faqMap ? Object.entries(faqMap) : [];
+          debug.faqItemsCount = faqItems.length;
+
+          if (faqItems.length === 0) {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay información disponible. Escribí *Menu* para volver al inicio o *Humano* para hablar con un operador."));
+            continue;
+          }
+
+          if (faqItems.length <= 3) {
+            const buttons = faqItems.map(([key]) => ({
+              type: "reply" as const,
+              reply: { id: `faq_${key}`, title: key.length > 20 ? key.slice(0, 20) : key },
+            }));
+
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
+              type: "interactive",
+              interactive: {
+                type: "button",
+                body: { text: "Seleccioná un tema:" },
+                action: { buttons },
+              },
+            });
+          } else {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
+              type: "interactive",
+              interactive: {
+                type: "list",
+                header: { type: "text", text: "Información" },
+                body: { text: "Seleccioná un tema:" },
+                action: {
+                  button: "Ver temas",
+                  sections: [{
+                    title: "Disponibles",
+                    rows: faqItems.slice(0, 10).map(([key]) => ({
+                      id: `faq_${key}`,
+                      title: key,
+                    })),
+                  }],
+                },
+              },
+            });
+          }
           continue;
 
         } else if (replyId === "cancelar") {
@@ -428,6 +492,16 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           });
 
           await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("¿Cuál es tu nombre?"));
+        }
+
+        if (replyId?.startsWith("faq_")) {
+          const key = replyId.replace("faq_", "");
+          const answer = faqMap[key];
+          if (answer) {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(answer));
+          } else {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No encontré información sobre ese tema."));
+          }
         }
       }
     }
