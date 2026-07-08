@@ -49,25 +49,27 @@ export function buildGreetingButtons(bodyText?: string) {
 }
 
 export function buildServiceList(services: { id: number; nombre: string; precio: number }[]) {
+  const maxRows = 10;
+  const rows = services.slice(0, maxRows).map((s) => ({
+    id: `servicio_${s.id}`,
+    title: s.nombre,
+    description: `$${Number(s.precio).toLocaleString("es-AR")}`,
+  }));
+
+  if (services.length > maxRows) {
+    rows.push({ id: "ver_mas", title: `Ver más (${services.length - maxRows} más)`, description: "" });
+  }
+
   return {
     type: "interactive",
     interactive: {
       type: "list",
       header: { type: "text", text: "Nuestros Servicios" },
-      body: { text: "Seleccioná un servicio:" },
+      body: { text: `Seleccioná un servicio (${services.length} disponibles):` },
       footer: { text: "Elegí de la lista" },
       action: {
         button: "Ver servicios",
-        sections: [
-          {
-            title: "Disponibles",
-            rows: services.map((s) => ({
-              id: `servicio_${s.id}`,
-              title: s.nombre,
-              description: `$${Number(s.precio).toLocaleString("es-AR")}`,
-            })),
-          },
-        ],
+        sections: [{ title: "Disponibles", rows }],
       },
     },
   };
@@ -80,7 +82,7 @@ export function buildDateButtons(dates: string[]) {
       type: "button",
       body: { text: "Elegí un día disponible:" },
       action: {
-        buttons: dates.map((d) => {
+        buttons: dates.slice(0, 3).map((d) => {
           const date = new Date(d + "T12:00:00Z");
           const label = date.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
           return { type: "reply", reply: { id: `fecha_${d}`, title: label } };

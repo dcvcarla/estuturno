@@ -361,6 +361,10 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
 
         } else if (replyId?.startsWith("servicio_")) {
           debug.servicioId = replyId;
+          if (replyId === "ver_mas") {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("Hay más servicios disponibles. Escribí *Menu* para ver todas las opciones."));
+            continue;
+          }
           const serviceId = Number(replyId.replace("servicio_", ""));
           await prisma.chatSession.update({
             where: { id: session.id },
