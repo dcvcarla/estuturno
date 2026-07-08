@@ -319,6 +319,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("Turno cancelado con éxito."));
 
         } else if (replyId?.startsWith("servicio_")) {
+          debug.servicioId = replyId;
           const serviceId = Number(replyId.replace("servicio_", ""));
           await prisma.chatSession.update({
             where: { id: session.id },
@@ -338,23 +339,30 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             if (availableDates.length === 3) break;
           }
 
+          debug.availableDatesCount = availableDates.length;
           if (availableDates.length === 0) {
-            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay fechas disponibles para este servicio en los próximos 14 días."));
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay fechas disponibles para este servicio en los próximos 14 días."));
+            debug.sendNoDates = r.ok;
             continue;
           }
 
-          await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildDateButtons(availableDates));
+          const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildDateButtons(availableDates));
+          debug.sendDatesOk = r.ok;
 
         } else if (replyId?.startsWith("fecha_")) {
           const fecha = replyId.replace("fecha_", "");
           const serviceId = session.serviceId;
+          debug.selectedDate = fecha;
+          debug.serviceId = serviceId;
 
           if (!serviceId) continue;
 
           const slots = await getAvailableSlots(commerce.id, serviceId, fecha);
+          debug.slotsCount = slots.length;
 
           if (slots.length === 0) {
-            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay horarios disponibles para esa fecha."));
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay horarios disponibles para esa fecha."));
+            debug.sendNoSlots = r.ok;
             continue;
           }
 
@@ -363,7 +371,8 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             data: { estado: "selecting_slot", fecha },
           });
 
-          await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildSlotButtons(slots));
+          const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildSlotButtons(slots));
+          debug.sendSlotsOk = r.ok;
 
         } else if (replyId?.startsWith("hora_")) {
           const hora = replyId.replace("hora_", "");
