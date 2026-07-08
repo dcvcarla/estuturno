@@ -71,6 +71,8 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
     });
     debug.commerceFound = !!commerce;
     debug.tokenPresent = !!commerce?.whatsappToken;
+    debug.commerceId = commerce?.id;
+    if (commerce?.whatsappToken) debug.tokenPreview = commerce.whatsappToken.substring(0, 15) + "...";
 
     if (!commerce || !commerce.whatsappToken) return res.json(debug);
 
