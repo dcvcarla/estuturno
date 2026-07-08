@@ -16,6 +16,7 @@ model Commerce {
   whatsappToken       String?  @map("whatsapp_token")
   mpAccessToken       String?
   configuracionHorarios String? @map("configuracion_horarios") @db.Text
+  botConfig            String? @map("bot_config") @db.Text
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 

@@ -20,7 +20,7 @@ router.put("/", authenticate, validate(commerceUpdateSchema), async (req: Reques
   if (!req.admin!.commerceId) {
     return res.status(400).json({ error: "Admin has no associated commerce" });
   }
-  const { nombre, telefonoWhatsapp, phoneNumberId, whatsappToken, mpAccessToken, configuracionHorarios } = req.body;
+  const { nombre, telefonoWhatsapp, phoneNumberId, whatsappToken, mpAccessToken, configuracionHorarios, botConfig } = req.body;
 
   const commerce = await prisma.commerce.update({
     where: { id: req.admin!.commerceId },
@@ -31,6 +31,7 @@ router.put("/", authenticate, validate(commerceUpdateSchema), async (req: Reques
       ...(whatsappToken !== undefined && { whatsappToken }),
       ...(mpAccessToken !== undefined && { mpAccessToken }),
       ...(configuracionHorarios !== undefined && { configuracionHorarios: JSON.stringify(configuracionHorarios) }),
+      ...(botConfig !== undefined && { botConfig: JSON.stringify(botConfig) }),
     },
   });
 

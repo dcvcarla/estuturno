@@ -25,6 +25,7 @@ export const commerceUpdateSchema = z.object({
   whatsappToken: z.string().optional(),
   mpAccessToken: z.string().nullable().optional(),
   configuracionHorarios: z.any().optional(),
+  botConfig: z.any().optional(),
 });
 
 export const serviceCreateSchema = z.object({

@@ -32,12 +32,12 @@ export async function sendWhatsAppMessage(
   return { ok: res.ok, status: res.status, data: res.ok ? undefined : "see logs" };
 }
 
-export function buildGreetingButtons() {
+export function buildGreetingButtons(bodyText?: string) {
   return {
     type: "interactive",
     interactive: {
       type: "button",
-      body: { text: "¡Hola! ¿En qué puedo ayudarte?" },
+      body: { text: bodyText || "¡Hola! ¿En qué puedo ayudarte?" },
       action: {
         buttons: [
           { type: "reply", reply: { id: "reservar", title: "📅 Reservar Turno" } },

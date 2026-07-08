@@ -7,21 +7,35 @@ interface Commerce {
   mpAccessToken: string;
 }
 
+interface FaqItem {
+  pregunta: string;
+  respuesta: string;
+}
+
 const DAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
 
 export function AdminSettings() {
   const [commerce, setCommerce] = useState<Commerce>({ nombre: "", telefonoWhatsapp: "", mpAccessToken: "" });
   const [horarios, setHorarios] = useState<Record<string, { inicio: string; fin: string }[]>>({});
+  const [greeting, setGreeting] = useState("");
+  const [faq, setFaq] = useState<FaqItem[]>([]);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api<Commerce & { configuracionHorarios: string }>("/api/commerce")
+    api<Commerce & { configuracionHorarios: string; botConfig: string }>("/api/commerce")
       .then((data) => {
         setCommerce(data);
         if (data.configuracionHorarios) {
           try { setHorarios(JSON.parse(data.configuracionHorarios)); } catch {}
+        }
+        if (data.botConfig) {
+          try {
+            const cfg = JSON.parse(data.botConfig);
+            if (cfg.saludo) setGreeting(cfg.saludo);
+            if (Array.isArray(cfg.faq)) setFaq(cfg.faq);
+          } catch {}
         }
       })
       .catch(() => {});
@@ -34,7 +48,14 @@ export function AdminSettings() {
     try {
       await api("/api/commerce", {
         method: "PUT",
-        body: JSON.stringify({ ...commerce, configuracionHorarios: horarios }),
+        body: JSON.stringify({
+          ...commerce,
+          configuracionHorarios: horarios,
+          botConfig: {
+            saludo: greeting,
+            faq: faq.filter((f) => f.pregunta.trim() && f.respuesta.trim()),
+          },
+        }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -81,6 +102,22 @@ export function AdminSettings() {
       }
       return { ...prev, [day]: slots };
     });
+  }
+
+  function addFaq() {
+    setFaq([...faq, { pregunta: "", respuesta: "" }]);
+  }
+
+  function updateFaq(idx: number, field: "pregunta" | "respuesta", value: string) {
+    setFaq((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+  }
+
+  function removeFaq(idx: number) {
+    setFaq((prev) => prev.filter((_, i) => i !== idx));
   }
 
   return (
@@ -141,6 +178,26 @@ export function AdminSettings() {
               </div>
             );
           })}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 space-y-3">
+          <h2 className="text-lg font-semibold">Bot - Mensaje de bienvenida</h2>
+          <textarea value={greeting} onChange={(e) => setGreeting(e.target.value)} rows={3} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" placeholder="¡Hola! ¿En qué puedo ayudarte?" />
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 space-y-3">
+          <h2 className="text-lg font-semibold">Bot - Preguntas frecuentes</h2>
+          <p className="text-sm text-gray-500">El bot responderá estos textos cuando el cliente escriba la palabra clave.</p>
+          {faq.map((item, idx) => (
+            <div key={idx} className="flex gap-2 items-start border-b pb-3">
+              <div className="flex-1 space-y-2">
+                <input value={item.pregunta} onChange={(e) => updateFaq(idx, "pregunta", e.target.value)} className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" placeholder="Palabra clave (ej: direccion)" />
+                <textarea value={item.respuesta} onChange={(e) => updateFaq(idx, "respuesta", e.target.value)} rows={2} className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" placeholder="Respuesta" />
+              </div>
+              <button type="button" onClick={() => removeFaq(idx)} className="text-red-500 text-sm mt-1">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={addFaq} className="text-indigo-600 text-sm">+ Agregar FAQ</button>
         </div>
 
         <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50">

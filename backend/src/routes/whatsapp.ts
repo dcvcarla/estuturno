@@ -79,7 +79,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
     debug.step = "lookup_commerce";
     const commerce = await prisma.commerce.findFirst({
       where: { phoneNumberId },
-      select: { id: true, nombre: true, whatsappToken: true, telefonoWhatsapp: true },
+      select: { id: true, nombre: true, whatsappToken: true, telefonoWhatsapp: true, botConfig: true },
     });
     debug.commerceFound = !!commerce;
     debug.tokenPresent = !!commerce?.whatsappToken;
@@ -93,6 +93,17 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
     const messages = value?.messages;
     debug.msgCount = messages?.length;
     if (!messages || messages.length === 0) return res.json(debug);
+
+    let botConfig: any = null;
+    try { if (commerce.botConfig) botConfig = JSON.parse(commerce.botConfig); } catch {}
+
+    const faqMap: Record<string, string> = {};
+    if (botConfig?.faq) {
+      for (const item of botConfig.faq) {
+        const key = (item.pregunta || "").toLowerCase().trim();
+        if (key && item.respuesta) faqMap[key] = item.respuesta;
+      }
+    }
 
     for (const msg of messages) {
       const from = msg.from;
@@ -108,13 +119,23 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
       if (msgType === "text") {
         const text = (msg.text?.body || "").trim();
 
-        if (["hola", "buenas", "hey", "hi", "hello", "buenos días", "buenas tardes", "menu"].includes(text.toLowerCase())) {
+        const lower = text.toLowerCase();
+        const faqMatch = Object.keys(faqMap).find((k) => lower === k || lower.includes(k));
+        if (faqMatch) {
+          debug.faqMatch = faqMatch;
+          const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(faqMap[faqMatch]));
+          debug.sendFaqOk = r.ok;
+          continue;
+        }
+
+        if (["hola", "buenas", "hey", "hi", "hello", "buenos días", "buenas tardes", "menu"].includes(lower)) {
           await prisma.chatSession.update({
             where: { id: session.id },
             data: { estado: "menu", serviceId: null, fecha: null, hora: null },
           });
           debug.greetingMatch = true;
-          const sendResult = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildGreetingButtons());
+          const greetingBody = botConfig?.saludo || "¡Hola! ¿En qué puedo ayudarte?";
+          const sendResult = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildGreetingButtons(greetingBody));
           debug.sendOk = sendResult.ok;
           debug.sendStatus = sendResult.status;
           continue;
