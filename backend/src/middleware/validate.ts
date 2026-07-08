@@ -23,7 +23,7 @@ export const commerceUpdateSchema = z.object({
   telefonoWhatsapp: z.string().optional(),
   phoneNumberId: z.string().optional(),
   whatsappToken: z.string().optional(),
-  mpAccessToken: z.string().optional(),
+  mpAccessToken: z.string().nullable().optional(),
   configuracionHorarios: z.any().optional(),
 });
 
