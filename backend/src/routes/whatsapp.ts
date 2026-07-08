@@ -22,6 +22,11 @@ router.get("/webhooks/debug-logs", (_req: Request, res: Response) => {
   res.json(debugLogs);
 });
 
+router.delete("/webhooks/debug-logs", (_req: Request, res: Response) => {
+  debugLogs.length = 0;
+  res.json({ cleared: true });
+});
+
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "estuturno_verify_2026";
 
 router.get("/webhooks/whatsapp", (req: Request, res: Response) => {
