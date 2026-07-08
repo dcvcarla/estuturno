@@ -32,6 +32,7 @@ model Service {
   id             Int      @id @default(autoincrement())
   commerceId     Int      @map("commerce_id")
   nombre         String
+  descripcion    String? @map("descripcion") @db.Text
   duracionMinutos Int     @map("duracion_minutos")
   precio         Decimal  @db.Decimal(10, 2)
   montoSena      Decimal? @map("monto_seña") @db.Decimal(10, 2)

@@ -300,10 +300,10 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
         if (replyId === "reservar") {
           const rawServices = await prisma.service.findMany({
             where: { commerceId: commerce.id, activo: true },
-            select: { id: true, nombre: true, precio: true },
+            select: { id: true, nombre: true, descripcion: true, precio: true },
           });
 
-          const services = rawServices.map((s) => ({ id: s.id, nombre: s.nombre, precio: Number(s.precio) }));
+          const services = rawServices.map((s) => ({ id: s.id, nombre: s.nombre, descripcion: s.descripcion, precio: Number(s.precio) }));
           debug.servicesCount = services.length;
 
           if (services.length === 0) {
@@ -430,6 +430,10 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
             continue;
           }
           const serviceId = Number(replyId.replace("servicio_", ""));
+          const selectedService = await prisma.service.findUnique({ where: { id: serviceId }, select: { nombre: true, descripcion: true, precio: true } });
+          if (selectedService?.descripcion) {
+            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage(`*${selectedService.nombre}*\n\n${selectedService.descripcion}\n\n*Precio:* $${Number(selectedService.precio).toLocaleString("es-AR")}`));
+          }
           await prisma.chatSession.update({
             where: { id: session.id },
             data: { estado: "selecting_date", serviceId },

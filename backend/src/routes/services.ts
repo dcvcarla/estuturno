@@ -21,12 +21,13 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
 });
 
 router.post("/", authenticate, validate(serviceCreateSchema), async (req: Request, res: Response) => {
-  const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
+  const { nombre, descripcion, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
 
   const service = await prisma.service.create({
     data: {
       commerceId: req.admin!.commerceId!,
       nombre,
+      descripcion: descripcion || null,
       duracionMinutos,
       precio,
       montoSena: montoSena || null,
@@ -38,13 +39,14 @@ router.post("/", authenticate, validate(serviceCreateSchema), async (req: Reques
 });
 
 router.put("/:id", authenticate, validate(serviceUpdateSchema), async (req: Request, res: Response) => {
-  const { nombre, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
+  const { nombre, descripcion, duracionMinutos, precio, montoSena, configuracionHorarios } = req.body;
   const id = Number(req.params.id);
 
   const service = await prisma.service.updateMany({
     where: { id, commerceId: req.admin!.commerceId! },
     data: {
       ...(nombre !== undefined && { nombre }),
+      ...(descripcion !== undefined && { descripcion }),
       ...(duracionMinutos !== undefined && { duracionMinutos }),
       ...(precio !== undefined && { precio }),
       ...(montoSena !== undefined && { montoSena }),

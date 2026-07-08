@@ -30,6 +30,7 @@ export const commerceUpdateSchema = z.object({
 
 export const serviceCreateSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido"),
+  descripcion: z.string().optional(),
   duracionMinutos: z.number().int().min(5, "Mínimo 5 minutos"),
   precio: z.number().min(0, "Precio debe ser mayor o igual a 0"),
   montoSena: z.number().min(0).nullable().optional(),
@@ -38,6 +39,7 @@ export const serviceCreateSchema = z.object({
 
 export const serviceUpdateSchema = z.object({
   nombre: z.string().min(1).optional(),
+  descripcion: z.string().optional(),
   duracionMinutos: z.number().int().min(5).optional(),
   precio: z.number().min(0).optional(),
   montoSena: z.number().min(0).nullable().optional(),

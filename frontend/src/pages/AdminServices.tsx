@@ -4,6 +4,7 @@ import { api } from "../api/client";
 interface Service {
   id: number;
   nombre: string;
+  descripcion: string | null;
   duracionMinutos: number;
   precio: number;
   montoSena: number | null;
@@ -18,6 +19,7 @@ export function AdminServices() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
   const [nombre, setNombre] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [duracionMinutos, setDuracionMinutos] = useState(30);
   const [precio, setPrecio] = useState(0);
   const [montoSena, setMontoSena] = useState("");
@@ -36,6 +38,7 @@ export function AdminServices() {
   function openCreate() {
     setEditing(null);
     setNombre("");
+    setDescripcion("");
     setDuracionMinutos(30);
     setPrecio(0);
     setMontoSena("");
@@ -47,6 +50,7 @@ export function AdminServices() {
   function openEdit(s: Service) {
     setEditing(s);
     setNombre(s.nombre);
+    setDescripcion(s.descripcion || "");
     setDuracionMinutos(s.duracionMinutos);
     setPrecio(Number(s.precio));
     setMontoSena(s.montoSena ? String(Number(s.montoSena)) : "");
@@ -60,6 +64,7 @@ export function AdminServices() {
     e.preventDefault();
     const body: Record<string, unknown> = {
       nombre,
+      descripcion: descripcion || null,
       duracionMinutos,
       precio,
       montoSena: montoSena ? Number(montoSena) : null,
@@ -213,6 +218,10 @@ export function AdminServices() {
           <div>
             <label className="block text-sm font-medium">Nombre</label>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Descripción (opcional)</label>
+            <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={3} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" placeholder="Ej: Corte de cabello moderno con navaja" />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>

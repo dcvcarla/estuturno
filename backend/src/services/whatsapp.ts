@@ -49,12 +49,12 @@ export function buildGreetingButtons(bodyText?: string) {
   };
 }
 
-export function buildServiceList(services: { id: number; nombre: string; precio: number }[]) {
+export function buildServiceList(services: { id: number; nombre: string; descripcion?: string | null; precio: number }[]) {
   const maxRows = 10;
   const rows = services.slice(0, maxRows).map((s) => ({
     id: `servicio_${s.id}`,
     title: s.nombre,
-    description: `$${Number(s.precio).toLocaleString("es-AR")}`,
+    description: s.descripcion ? s.descripcion.slice(0, 50) : `$${Number(s.precio).toLocaleString("es-AR")}`,
   }));
 
   if (services.length > maxRows) {
