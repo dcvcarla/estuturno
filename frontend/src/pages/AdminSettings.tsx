@@ -13,6 +13,8 @@ export function AdminSettings() {
   const [commerce, setCommerce] = useState<Commerce>({ nombre: "", telefonoWhatsapp: "", mpAccessToken: "" });
   const [horarios, setHorarios] = useState<Record<string, { inicio: string; fin: string }[]>>({});
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api<Commerce & { configuracionHorarios: string }>("/api/commerce")
@@ -27,12 +29,20 @@ export function AdminSettings() {
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
-    await api("/api/commerce", {
-      method: "PUT",
-      body: JSON.stringify({ ...commerce, configuracionHorarios: horarios }),
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setError("");
+    setSaving(true);
+    try {
+      await api("/api/commerce", {
+        method: "PUT",
+        body: JSON.stringify({ ...commerce, configuracionHorarios: horarios }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      setError(err.message || "Error al guardar");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function toggleDay(day: string) {
@@ -82,6 +92,11 @@ export function AdminSettings() {
           Cambios guardados
         </div>
       )}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-6 max-w-xl">
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
@@ -128,8 +143,8 @@ export function AdminSettings() {
           })}
         </div>
 
-        <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
-          Guardar cambios
+        <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50">
+          {saving ? "Guardando..." : "Guardar cambios"}
         </button>
       </form>
     </div>
