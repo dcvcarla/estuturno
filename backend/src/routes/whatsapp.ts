@@ -221,6 +221,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
 
       } else if (msgType === "interactive") {
         const replyId = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id;
+        debug.replyId = replyId;
 
         if (!replyId) continue;
 
@@ -231,9 +232,11 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
           });
 
           const services = rawServices.map((s) => ({ id: s.id, nombre: s.nombre, precio: Number(s.precio) }));
+          debug.servicesCount = services.length;
 
           if (services.length === 0) {
-            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay servicios disponibles en este momento."));
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildTextMessage("No hay servicios disponibles en este momento."));
+            debug.sendNoServices = r.ok;
             continue;
           }
 
@@ -243,7 +246,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
               reply: { id: `servicio_${s.id}`, title: s.nombre.length > 20 ? s.nombre.slice(0, 20) : s.nombre },
             }));
 
-            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, {
               type: "interactive",
               interactive: {
                 type: "button",
@@ -251,8 +254,11 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
                 action: { buttons },
               },
             });
+            debug.sendServicesOk = r.ok;
+            debug.sendServicesStatus = r.status;
           } else {
-            await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildServiceList(services));
+            const r = await sendWhatsAppMessage(phoneNumberId, commerce.whatsappToken, from, buildServiceList(services));
+            debug.sendListOk = r.ok;
           }
 
           await prisma.chatSession.update({
@@ -362,6 +368,7 @@ router.post("/webhooks/whatsapp", async (req: Request, res: Response) => {
     res.json(debug);
   } catch (err: any) {
     debug.error = err.message;
+    debug.errorStack = err.stack?.substring(0, 200);
     res.json(debug);
   }
 });
