@@ -18,10 +18,6 @@ const router = Router();
 const MAX_LOGS = 50;
 const debugLogs: any[] = [];
 
-router.get("/privacy", (_req: Request, res: Response) => {
-  res.type("html").send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>EsTuTurno - Política de Privacidad</title></head><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:20px"><h1>Política de Privacidad</h1><p>EsTuTurno recopila y almacena los datos necesarios para la gestión de turnos: nombre, teléfono, historial de reservas. Los datos se utilizan exclusivamente para el servicio de agenda y no se comparten con terceros. El usuario puede solicitar la eliminación de sus datos contactando al comercio.</p><p>Última actualización: Julio 2026.</p><p>Contacto: soporte@estuturno.com.ar</p></body></html>`);
-});
-
 router.get("/webhooks/debug-logs", (_req: Request, res: Response) => {
   res.json(debugLogs);
 });
